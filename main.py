@@ -40,7 +40,7 @@ from utils.ai_helper import CategoryPredictor
 from utils.qr_helper import QRGenerator
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "assetflow.db")
+DB_PATH = os.path.join(BASE_DIR, "database", "assetflow.db")
 STYLE_PATH = os.path.join(BASE_DIR, "ui", "style.qss")
 
 
@@ -161,31 +161,36 @@ class MainWindow(QMainWindow):
         self.summary_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 10px;")
         self.summary_label.setWordWrap(True)
 
-        # --- 1. KANVAS UNTUK GRAFIK (BARU) ---
-        self.figure = Figure(figsize=(8, 4), dpi=100)
+        # --- 1. KANVAS UNTUK GRAFIK (DIPERBESAR) ---
+        self.figure = Figure(figsize=(10, 7), dpi=100)
         self.canvas = FigureCanvas(self.figure)
 
-        # --- 2. JEJERKAN TOMBOL EXPORT KE SAMPING BIAR RAPI ---
+        # --- 2. JEJERKAN TOMBOL EXPORT & RESET KE SAMPING ---
         export_layout = QHBoxLayout()
         export_items_btn = QPushButton("📄 Export Master CSV")
         export_loans_btn = QPushButton("📄 Export Peminjaman CSV")
         export_items_pdf_btn = QPushButton("📕 Export Master PDF")
         export_loans_pdf_btn = QPushButton("📕 Export Peminjaman PDF")
+        
+        reset_db_btn = QPushButton("⚠️ Factory Reset")
+        reset_db_btn.setStyleSheet("background-color: #E74C3C; color: white; font-weight: bold;")
 
         export_items_btn.clicked.connect(self.export_items_csv)
         export_loans_btn.clicked.connect(self.export_loans_csv)
         export_items_pdf_btn.clicked.connect(self.export_items_pdf)
         export_loans_pdf_btn.clicked.connect(self.export_loans_pdf)
+        reset_db_btn.clicked.connect(self.do_factory_reset)
 
         export_layout.addWidget(export_items_btn)
         export_layout.addWidget(export_loans_btn)
         export_layout.addWidget(export_items_pdf_btn)
         export_layout.addWidget(export_loans_pdf_btn)
+        export_layout.addWidget(reset_db_btn)
 
         # --- 3. SUSUN KE DALAM HALAMAN ---
         layout.addWidget(QLabel("<b>Dashboard Ringkasan AssetFlow</b>"))
         layout.addWidget(self.summary_label)
-        layout.addWidget(self.canvas, 1)  # Angka 1 agar canvas mengambil sisa ruang paling besar
+        layout.addWidget(self.canvas, 1)
         layout.addLayout(export_layout)
         
         page.setLayout(layout)
@@ -206,32 +211,60 @@ class MainWindow(QMainWindow):
 
         # 2. Update Visualisasi Grafik (Chart)
         self.figure.clear()
+        
+        # Ambil semua data barang untuk dianalisa grafiknya
+        semua_barang = self.db_manager.get_items()
 
-        # CHART KIRI: Pie Chart Ketersediaan Barang
-        ax1 = self.figure.add_subplot(121) # 1 baris, 2 kolom, posisi 1
+        # ==========================================
+        # CHART 1 (KIRI ATAS): Pie Chart Ketersediaan
+        # ==========================================
+        ax1 = self.figure.add_subplot(221)
         labels_barang = ['Tersedia', 'Dipinjam']
         sizes_barang = [summary['available_items'], summary['borrowed_items']]
-        colors_barang = ['#2ECC71', '#E74C3C'] # Hijau dan Merah
+        colors_barang = ['#2ECC71', '#E74C3C']
+        explode = (0.08, 0)
 
         if sum(sizes_barang) == 0:
             ax1.text(0.5, 0.5, "Belum ada data", ha='center', va='center')
             ax1.axis('off')
         else:
-            ax1.pie(sizes_barang, labels=labels_barang, colors=colors_barang, autopct='%1.1f%%', startangle=90)
-            ax1.set_title('Proporsi Ketersediaan Aset')
+            ax1.pie(sizes_barang, explode=explode, labels=labels_barang, colors=colors_barang, autopct='%1.1f%%', startangle=90, shadow=True)
+            ax1.set_title('Proporsi Ketersediaan Aset', fontweight='bold')
 
-        # CHART KANAN: Bar Chart Status Transaksi
-        ax2 = self.figure.add_subplot(122) # 1 baris, 2 kolom, posisi 2
-        labels_transaksi = ['Transaksi Aktif', 'Telah Selesai']
+        # ==========================================
+        # CHART 2 (KANAN ATAS): Bar Chart Transaksi
+        # ==========================================
+        ax2 = self.figure.add_subplot(222)
+        labels_transaksi = ['Aktif', 'Selesai']
         sizes_transaksi = [summary['active_loans'], summary['completed_loans']]
-        colors_transaksi = ['#F1C40F', '#3498DB'] # Kuning dan Biru
+        colors_transaksi = ['#F1C40F', '#3498DB']
 
-        ax2.bar(labels_transaksi, sizes_transaksi, color=colors_transaksi)
-        ax2.set_title('Status Peminjaman')
-        ax2.set_ylabel('Jumlah Transaksi')
-        
-        # Biar angka di sumbu Y bar chart tidak pakai koma (karena jumlah barang pasti bilangan bulat)
+        bars1 = ax2.bar(labels_transaksi, sizes_transaksi, color=colors_transaksi, edgecolor='black', zorder=3)
+        ax2.set_title('Status Peminjaman', fontweight='bold')
+        ax2.grid(axis='y', linestyle='--', alpha=0.7, zorder=0)
         ax2.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+        ax2.bar_label(bars1, padding=3, fontweight='bold')
+
+        # ==========================================
+        # CHART 3 (BAWAH): Bar Chart Kondisi Barang
+        # ==========================================
+        ax3 = self.figure.add_subplot(212)
+        
+        kondisi_counts = {'Baik': 0, 'Rusak Ringan': 0, 'Rusak Berat': 0}
+        for item in semua_barang:
+            knd = item.get('condition', '')
+            if knd in kondisi_counts:
+                kondisi_counts[knd] += 1
+                
+        labels_kondisi = list(kondisi_counts.keys())
+        sizes_kondisi = list(kondisi_counts.values())
+        colors_kondisi = ['#27AE60', '#F39C12', '#C0392B']
+        
+        bars2 = ax3.bar(labels_kondisi, sizes_kondisi, color=colors_kondisi, edgecolor='black', zorder=3)
+        ax3.set_title('Rekapitulasi Kondisi Fisik Aset', fontweight='bold')
+        ax3.grid(axis='y', linestyle='--', alpha=0.7, zorder=0)
+        ax3.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+        ax3.bar_label(bars2, padding=3, fontweight='bold')
 
         # Render/Gambarkan ke layar
         self.figure.tight_layout()
@@ -696,6 +729,26 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "Sukses", "Transaksi peminjaman berhasil ditandai selesai.")
         self.clear_loan_form()
 
+    def do_factory_reset(self):
+        # Munculkan peringatan super ketat sebelum menghapus
+        confirm = QMessageBox.warning(
+            self, 
+            "PERINGATAN BAHAYA!", 
+            "Yakin ingin MENGHAPUS SEMUA DATA barang dan peminjaman secara permanen?\n\nID juga akan direset dari angka 1. Tindakan ini TIDAK BISA dibatalkan!", 
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            success, msg = self.db_manager.reset_database()
+            if success:
+                QMessageBox.information(self, "Reset Berhasil", msg)
+                # Muat ulang semua tabel agar kosong dan grafik jadi 0
+                self.load_dashboard()
+                self.load_items_table()
+                self.load_loans_table()
+            else:
+                QMessageBox.critical(self, "Gagal", msg)
+
     def export_items_csv(self):
         path, _ = QFileDialog.getSaveFileName(self, "Simpan CSV Master Barang", "master_barang.csv", "CSV Files (*.csv)")
         if not path:
@@ -728,12 +781,10 @@ class MainWindow(QMainWindow):
         export_pdf(rows, path, "Laporan Peminjaman")
         QMessageBox.information(self, "Sukses", f"Data peminjaman diekspor ke {path}")
 
-
 def load_stylesheet(app):
     if os.path.exists(STYLE_PATH):
         with open(STYLE_PATH, "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
-
 
 def main():
     app = QApplication(sys.argv)
@@ -745,7 +796,6 @@ def main():
         window = MainWindow(db_manager)
         window.show()
         sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
