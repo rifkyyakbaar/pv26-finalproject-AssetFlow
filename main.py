@@ -27,8 +27,17 @@ from PySide6.QtWidgets import (
     QSpinBox,
 )
 
+import matplotlib
+matplotlib.use('QtAgg')
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
 from database.db import DatabaseManager
 from utils.exporter import export_csv, export_pdf
+
+# --- IMPORT FITUR BONUS (AI & QR) ---
+from utils.ai_helper import CategoryPredictor
+from utils.qr_helper import QRGenerator
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "assetflow.db")
@@ -86,6 +95,10 @@ class MainWindow(QMainWindow):
     def __init__(self, db_manager):
         super().__init__()
         self.db_manager = db_manager
+        
+        # Inisialisasi Otak AI
+        self.ai = CategoryPredictor()
+        
         self.setWindowTitle("AssetFlow - Aplikasi Manajemen Aset")
         self.resize(1200, 760)
         self.current_item_id = None
@@ -145,27 +158,84 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         self.summary_label = QLabel()
+        self.summary_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 10px;")
         self.summary_label.setWordWrap(True)
 
-        export_items_btn = QPushButton("Export Master Barang CSV")
-        export_loans_btn = QPushButton("Export Peminjaman CSV")
-        export_items_pdf_btn = QPushButton("Export Master Barang PDF")
-        export_loans_pdf_btn = QPushButton("Export Peminjaman PDF")
+        # --- 1. KANVAS UNTUK GRAFIK (BARU) ---
+        self.figure = Figure(figsize=(8, 4), dpi=100)
+        self.canvas = FigureCanvas(self.figure)
+
+        # --- 2. JEJERKAN TOMBOL EXPORT KE SAMPING BIAR RAPI ---
+        export_layout = QHBoxLayout()
+        export_items_btn = QPushButton("📄 Export Master CSV")
+        export_loans_btn = QPushButton("📄 Export Peminjaman CSV")
+        export_items_pdf_btn = QPushButton("📕 Export Master PDF")
+        export_loans_pdf_btn = QPushButton("📕 Export Peminjaman PDF")
 
         export_items_btn.clicked.connect(self.export_items_csv)
         export_loans_btn.clicked.connect(self.export_loans_csv)
         export_items_pdf_btn.clicked.connect(self.export_items_pdf)
         export_loans_pdf_btn.clicked.connect(self.export_loans_pdf)
 
-        layout.addWidget(QLabel("Dashboard Ringkasan"))
+        export_layout.addWidget(export_items_btn)
+        export_layout.addWidget(export_loans_btn)
+        export_layout.addWidget(export_items_pdf_btn)
+        export_layout.addWidget(export_loans_pdf_btn)
+
+        # --- 3. SUSUN KE DALAM HALAMAN ---
+        layout.addWidget(QLabel("<b>Dashboard Ringkasan AssetFlow</b>"))
         layout.addWidget(self.summary_label)
-        layout.addWidget(export_items_btn)
-        layout.addWidget(export_loans_btn)
-        layout.addWidget(export_items_pdf_btn)
-        layout.addWidget(export_loans_pdf_btn)
-        layout.addStretch()
+        layout.addWidget(self.canvas, 1)  # Angka 1 agar canvas mengambil sisa ruang paling besar
+        layout.addLayout(export_layout)
+        
         page.setLayout(layout)
         return page
+
+    def load_dashboard(self):
+        # 1. Update Teks Ringkasan
+        summary = self.db_manager.get_dashboard_summary()
+        message = (
+            f"📦 Total Barang: {summary['total_items']}  |  "
+            f"✅ Tersedia: {summary['available_items']}  |  "
+            f"🤝 Dipinjam: {summary['borrowed_items']}\n"
+            f"🔄 Total Transaksi: {summary['total_loans']}  |  "
+            f"⏳ Aktif: {summary['active_loans']}  |  "
+            f"🏁 Selesai: {summary['completed_loans']}"
+        )
+        self.summary_label.setText(message)
+
+        # 2. Update Visualisasi Grafik (Chart)
+        self.figure.clear()
+
+        # CHART KIRI: Pie Chart Ketersediaan Barang
+        ax1 = self.figure.add_subplot(121) # 1 baris, 2 kolom, posisi 1
+        labels_barang = ['Tersedia', 'Dipinjam']
+        sizes_barang = [summary['available_items'], summary['borrowed_items']]
+        colors_barang = ['#2ECC71', '#E74C3C'] # Hijau dan Merah
+
+        if sum(sizes_barang) == 0:
+            ax1.text(0.5, 0.5, "Belum ada data", ha='center', va='center')
+            ax1.axis('off')
+        else:
+            ax1.pie(sizes_barang, labels=labels_barang, colors=colors_barang, autopct='%1.1f%%', startangle=90)
+            ax1.set_title('Proporsi Ketersediaan Aset')
+
+        # CHART KANAN: Bar Chart Status Transaksi
+        ax2 = self.figure.add_subplot(122) # 1 baris, 2 kolom, posisi 2
+        labels_transaksi = ['Transaksi Aktif', 'Telah Selesai']
+        sizes_transaksi = [summary['active_loans'], summary['completed_loans']]
+        colors_transaksi = ['#F1C40F', '#3498DB'] # Kuning dan Biru
+
+        ax2.bar(labels_transaksi, sizes_transaksi, color=colors_transaksi)
+        ax2.set_title('Status Peminjaman')
+        ax2.set_ylabel('Jumlah Transaksi')
+        
+        # Biar angka di sumbu Y bar chart tidak pakai koma (karena jumlah barang pasti bilangan bulat)
+        ax2.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+
+        # Render/Gambarkan ke layar
+        self.figure.tight_layout()
+        self.canvas.draw()
 
     def create_items_page(self):
         page = QWidget()
@@ -204,6 +274,7 @@ class MainWindow(QMainWindow):
         form_layout = QVBoxLayout()
         self.item_name_input = QLineEdit()
         self.item_category_input = QLineEdit()
+        self.item_category_input.setPlaceholderText("Akan ditebak AI otomatis...")
         self.item_quantity_input = QSpinBox()
         self.item_quantity_input.setMinimum(1)
         self.item_condition_input = QComboBox()
@@ -211,6 +282,9 @@ class MainWindow(QMainWindow):
         self.item_location_input = QLineEdit()
         self.item_description_input = QTextEdit()
         self.item_description_input.setFixedHeight(70)
+
+        # Sambungkan fitur AI saat mengetik nama barang
+        self.item_name_input.textChanged.connect(self.auto_predict_category)
 
         form_layout.addWidget(QLabel("Nama Barang"))
         form_layout.addWidget(self.item_name_input)
@@ -230,16 +304,22 @@ class MainWindow(QMainWindow):
         update_button = QPushButton("Perbarui Barang")
         delete_button = QPushButton("Hapus Barang")
         reset_button = QPushButton("Bersihkan Form")
+        
+        # Tombol QR Code
+        generate_qr_button = QPushButton("Buat QR Code")
+        generate_qr_button.setStyleSheet("background-color: #9B59B6; color: white;")
 
         add_button.clicked.connect(self.add_item)
         update_button.clicked.connect(self.update_item)
         delete_button.clicked.connect(self.delete_item)
         reset_button.clicked.connect(self.clear_item_form)
+        generate_qr_button.clicked.connect(self.generate_qr_code)
 
         buttons_layout.addWidget(add_button)
         buttons_layout.addWidget(update_button)
         buttons_layout.addWidget(delete_button)
         buttons_layout.addWidget(reset_button)
+        buttons_layout.addWidget(generate_qr_button)
 
         layout.addLayout(search_layout)
         layout.addWidget(self.items_table)
@@ -247,6 +327,51 @@ class MainWindow(QMainWindow):
         layout.addLayout(buttons_layout)
         page.setLayout(layout)
         return page
+
+    # --- FUNGSI BONUS ---
+    def auto_predict_category(self, text):
+        kategori = self.ai.predict_category(text)
+        self.item_category_input.setText(kategori)
+
+    def generate_qr_code(self):
+        if not self.current_item_id:
+            QMessageBox.warning(self, "Peringatan", "Pilih barang dari tabel terlebih dahulu untuk dibuatkan QR Code.")
+            return
+            
+        kode = f"ITEM-{self.current_item_id}"
+        nama = self.item_name_input.text().strip()
+        
+        # Panggil pembuat QR (Sekarang mengembalikan gambar/pixmap, bukan path file)
+        pixmap = QRGenerator.get_qr_pixmap(kode, nama)
+        
+        # Bikin Jendela Pop-up
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"QR Code - {nama}")
+        layout = QVBoxLayout()
+        
+        # Tampilkan gambarnya di tengah
+        lbl_img = QLabel()
+        lbl_img.setPixmap(pixmap)
+        lbl_img.setAlignment(Qt.AlignCenter)
+        
+        # Tombol Opsional kalau user memang mau menyimpannya ke PC
+        btn_save = QPushButton("💾 Simpan Gambar (Opsional)")
+        btn_save.setStyleSheet("background-color: #3498DB; color: white;")
+        btn_save.clicked.connect(lambda: self.save_qr_manual(pixmap, kode))
+        
+        layout.addWidget(lbl_img)
+        layout.addWidget(btn_save)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    def save_qr_manual(self, pixmap, kode):
+        """Fungsi tambahan jika admin ingin menyimpan gambar QR ke harddisk"""
+        path, _ = QFileDialog.getSaveFileName(self, "Simpan QR Code", f"{kode}.png", "PNG Files (*.png)")
+        if path:
+            pixmap.save(path, "PNG")
+            QMessageBox.information(self, "Sukses", "Gambar QR Code berhasil disimpan!")
+
+    # --------------------
 
     def create_loans_page(self):
         page = QWidget()
@@ -346,18 +471,6 @@ class MainWindow(QMainWindow):
     def logout(self):
         self.close()
 
-    def load_dashboard(self):
-        summary = self.db_manager.get_dashboard_summary()
-        message = (
-            f"Total Barang: {summary['total_items']}\n"
-            f"Barang Tersedia: {summary['available_items']}\n"
-            f"Barang Dipinjam: {summary['borrowed_items']}\n"
-            f"Total Transaksi Peminjaman: {summary['total_loans']}\n"
-            f"Transaksi Aktif: {summary['active_loans']}\n"
-            f"Transaksi Selesai: {summary['completed_loans']}"
-        )
-        self.summary_label.setText(message)
-
     def load_items_table(self):
         query = self.item_search_input.text().strip()
         status_filter = self.item_filter_status.currentText()
@@ -385,8 +498,16 @@ class MainWindow(QMainWindow):
             return
 
         self.current_item_id = item["id"]
+        
+        # Disconnect AI sementara agar tidak menimpa kategori saat nge-klik tabel
+        self.item_name_input.textChanged.disconnect(self.auto_predict_category)
+        
         self.item_name_input.setText(item["name"])
         self.item_category_input.setText(item["category"])
+        
+        # Reconnect AI
+        self.item_name_input.textChanged.connect(self.auto_predict_category)
+        
         self.item_quantity_input.setValue(item["quantity"])
         index = self.item_condition_input.findText(item["condition"])
         self.item_condition_input.setCurrentIndex(index if index >= 0 else 0)
