@@ -4,7 +4,7 @@ import hashlib
 from datetime import datetime
 
 from PySide6.QtCore import Qt, QDate
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -106,10 +106,10 @@ class MainWindow(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        central_widget = QWidget()
-        main_layout = QHBoxLayout()
+        # 1. Buat Menu Dropdown di Pojok Kiri Atas
+        self.create_menu_bar()
 
-        self.sidebar = self.create_sidebar()
+        # 2. Buat Tumpukan Halaman
         self.stack = QStackedWidget()
 
         self.dashboard_page = self.create_dashboard_page()
@@ -120,38 +120,30 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.items_page)
         self.stack.addWidget(self.loans_page)
 
-        main_layout.addWidget(self.sidebar)
-        main_layout.addWidget(self.stack, 1)
-        central_widget.setLayout(main_layout)
-        self.setCentralWidget(central_widget)
+        # 3. Jadikan halaman full-screen di tengah (tanpa sidebar)
+        self.setCentralWidget(self.stack)
 
         self.load_dashboard()
         self.load_items_table()
         self.load_loans_table()
 
-    def create_sidebar(self):
-        sidebar = QGroupBox("Menu Navigasi")
-        sidebar.setFixedWidth(220)
-        layout = QVBoxLayout()
-
-        btn_dashboard = QPushButton("Dashboard")
-        btn_items = QPushButton("Master Barang")
-        btn_loans = QPushButton("Data Peminjaman")
-        btn_logout = QPushButton("Logout")
-
-        btn_dashboard.clicked.connect(lambda: self.stack.setCurrentWidget(self.dashboard_page))
-        btn_items.clicked.connect(lambda: self.stack.setCurrentWidget(self.items_page))
-        btn_loans.clicked.connect(lambda: self.stack.setCurrentWidget(self.loans_page))
-        btn_logout.clicked.connect(self.logout)
-
-        layout.addWidget(btn_dashboard)
-        layout.addWidget(btn_items)
-        layout.addWidget(btn_loans)
-        layout.addStretch()
-        layout.addWidget(btn_logout)
-
-        sidebar.setLayout(layout)
-        return sidebar
+    def create_menu_bar(self):
+        """Membuat Menu Dropdown di Atas Kiri"""
+        menubar = self.menuBar()
+        
+        nav_menu = menubar.addMenu("☰ Navigasi Menu")
+        
+        action_dashboard = nav_menu.addAction("📊 Dashboard Utama")
+        action_items = nav_menu.addAction("🗃️ Kelola Master Barang")
+        action_loans = nav_menu.addAction("🔄 Data Peminjaman")
+        
+        nav_menu.addSeparator() 
+        action_logout = nav_menu.addAction("🚪 Logout Sistem")
+        
+        action_dashboard.triggered.connect(lambda: self.stack.setCurrentWidget(self.dashboard_page))
+        action_items.triggered.connect(lambda: self.stack.setCurrentWidget(self.items_page))
+        action_loans.triggered.connect(lambda: self.stack.setCurrentWidget(self.loans_page))
+        action_logout.triggered.connect(self.logout)
 
     def create_dashboard_page(self):
         page = QWidget()
@@ -161,11 +153,9 @@ class MainWindow(QMainWindow):
         self.summary_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 10px;")
         self.summary_label.setWordWrap(True)
 
-        # --- 1. KANVAS UNTUK GRAFIK (DIPERBESAR) ---
         self.figure = Figure(figsize=(10, 7), dpi=100)
         self.canvas = FigureCanvas(self.figure)
 
-        # --- 2. JEJERKAN TOMBOL EXPORT & RESET KE SAMPING ---
         export_layout = QHBoxLayout()
         export_items_btn = QPushButton("📄 Export Master CSV")
         export_loans_btn = QPushButton("📄 Export Peminjaman CSV")
@@ -187,7 +177,6 @@ class MainWindow(QMainWindow):
         export_layout.addWidget(export_loans_pdf_btn)
         export_layout.addWidget(reset_db_btn)
 
-        # --- 3. SUSUN KE DALAM HALAMAN ---
         layout.addWidget(QLabel("<b>Dashboard Ringkasan AssetFlow</b>"))
         layout.addWidget(self.summary_label)
         layout.addWidget(self.canvas, 1)
@@ -197,7 +186,6 @@ class MainWindow(QMainWindow):
         return page
 
     def load_dashboard(self):
-        # 1. Update Teks Ringkasan
         summary = self.db_manager.get_dashboard_summary()
         message = (
             f"📦 Total Barang: {summary['total_items']}  |  "
@@ -209,15 +197,10 @@ class MainWindow(QMainWindow):
         )
         self.summary_label.setText(message)
 
-        # 2. Update Visualisasi Grafik (Chart)
         self.figure.clear()
-        
-        # Ambil semua data barang untuk dianalisa grafiknya
         semua_barang = self.db_manager.get_items()
 
-        # ==========================================
-        # CHART 1 (KIRI ATAS): Pie Chart Ketersediaan
-        # ==========================================
+        # CHART 1 (KIRI ATAS)
         ax1 = self.figure.add_subplot(221)
         labels_barang = ['Tersedia', 'Dipinjam']
         sizes_barang = [summary['available_items'], summary['borrowed_items']]
@@ -231,9 +214,7 @@ class MainWindow(QMainWindow):
             ax1.pie(sizes_barang, explode=explode, labels=labels_barang, colors=colors_barang, autopct='%1.1f%%', startangle=90, shadow=True)
             ax1.set_title('Proporsi Ketersediaan Aset', fontweight='bold')
 
-        # ==========================================
-        # CHART 2 (KANAN ATAS): Bar Chart Transaksi
-        # ==========================================
+        # CHART 2 (KANAN ATAS)
         ax2 = self.figure.add_subplot(222)
         labels_transaksi = ['Aktif', 'Selesai']
         sizes_transaksi = [summary['active_loans'], summary['completed_loans']]
@@ -245,11 +226,8 @@ class MainWindow(QMainWindow):
         ax2.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
         ax2.bar_label(bars1, padding=3, fontweight='bold')
 
-        # ==========================================
-        # CHART 3 (BAWAH): Bar Chart Kondisi Barang
-        # ==========================================
+        # CHART 3 (BAWAH)
         ax3 = self.figure.add_subplot(212)
-        
         kondisi_counts = {'Baik': 0, 'Rusak Ringan': 0, 'Rusak Berat': 0}
         for item in semua_barang:
             knd = item.get('condition', '')
@@ -266,20 +244,91 @@ class MainWindow(QMainWindow):
         ax3.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
         ax3.bar_label(bars2, padding=3, fontweight='bold')
 
-        # Render/Gambarkan ke layar
         self.figure.tight_layout()
         self.canvas.draw()
 
+    # ==========================================
+    # HALAMAN MASTER BARANG (LAYOUT KIRI-KANAN)
+    # ==========================================
     def create_items_page(self):
         page = QWidget()
-        layout = QVBoxLayout()
+        main_layout = QHBoxLayout() # Layout Utama Menyamping
+
+        # ------------------------------------
+        # KIRI: Panel Form Input (Fixed Width)
+        # ------------------------------------
+        left_widget = QGroupBox("Form Input Barang")
+        left_widget.setMaximumWidth(350) # Kunci lebar agar tidak terlalu melar
+        left_layout = QVBoxLayout()
+
+        self.item_name_input = QLineEdit()
+        self.item_category_input = QLineEdit()
+        self.item_category_input.setPlaceholderText("Akan ditebak AI otomatis...")
+        self.item_quantity_input = QSpinBox()
+        self.item_quantity_input.setMinimum(1)
+        self.item_condition_input = QComboBox()
+        self.item_condition_input.addItems(["Baik", "Rusak Ringan", "Rusak Berat"])
+        self.item_location_input = QLineEdit()
+        self.item_description_input = QTextEdit()
+        self.item_description_input.setFixedHeight(70)
+
+        # Trigger AI
+        self.item_name_input.textChanged.connect(self.auto_predict_category)
+
+        left_layout.addWidget(QLabel("Nama Barang"))
+        left_layout.addWidget(self.item_name_input)
+        left_layout.addWidget(QLabel("Kategori"))
+        left_layout.addWidget(self.item_category_input)
+        left_layout.addWidget(QLabel("Jumlah"))
+        left_layout.addWidget(self.item_quantity_input)
+        left_layout.addWidget(QLabel("Kondisi"))
+        left_layout.addWidget(self.item_condition_input)
+        left_layout.addWidget(QLabel("Lokasi"))
+        left_layout.addWidget(self.item_location_input)
+        left_layout.addWidget(QLabel("Keterangan"))
+        left_layout.addWidget(self.item_description_input)
+
+        # Susun tombol jadi 2 kolom agar rapi di panel sempit
+        btn_row1 = QHBoxLayout()
+        add_button = QPushButton("➕ Tambah")
+        update_button = QPushButton("✏️ Perbarui")
+        btn_row1.addWidget(add_button)
+        btn_row1.addWidget(update_button)
+
+        btn_row2 = QHBoxLayout()
+        delete_button = QPushButton("🗑️ Hapus")
+        reset_button = QPushButton("🔄 Bersihkan")
+        btn_row2.addWidget(delete_button)
+        btn_row2.addWidget(reset_button)
+
+        generate_qr_button = QPushButton("🔲 Buat QR Code")
+        generate_qr_button.setStyleSheet("background-color: #9B59B6; color: white; padding: 8px;")
+
+        add_button.clicked.connect(self.add_item)
+        update_button.clicked.connect(self.update_item)
+        delete_button.clicked.connect(self.delete_item)
+        reset_button.clicked.connect(self.clear_item_form)
+        generate_qr_button.clicked.connect(self.generate_qr_code)
+
+        left_layout.addLayout(btn_row1)
+        left_layout.addLayout(btn_row2)
+        left_layout.addWidget(generate_qr_button)
+        left_layout.addStretch() # Dorong semua ke atas
+
+        left_widget.setLayout(left_layout)
+
+        # ------------------------------------
+        # KANAN: Panel Pencarian & Tabel Data
+        # ------------------------------------
+        right_widget = QWidget()
+        right_layout = QVBoxLayout()
 
         search_layout = QHBoxLayout()
         self.item_search_input = QLineEdit()
         self.item_search_input.setPlaceholderText("Cari nama, kategori, kondisi, lokasi...")
         self.item_filter_status = QComboBox()
         self.item_filter_status.addItems(["Semua", "Tersedia", "Dipinjam"])
-        search_button = QPushButton("Cari")
+        search_button = QPushButton("🔍 Cari")
         clear_search_button = QPushButton("Reset")
 
         search_button.clicked.connect(self.load_items_table)
@@ -293,129 +342,123 @@ class MainWindow(QMainWindow):
         self.items_table = QTableWidget()
         self.items_table.setColumnCount(7)
         self.items_table.setHorizontalHeaderLabels([
-            "ID",
-            "Nama Barang",
-            "Kategori",
-            "Jumlah",
-            "Kondisi",
-            "Lokasi",
-            "Status",
+            "ID", "Nama Barang", "Kategori", "Jumlah", "Kondisi", "Lokasi", "Status"
         ])
         self.items_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.items_table.horizontalHeader().setStretchLastSection(True)
         self.items_table.cellClicked.connect(self.load_item_form)
 
-        form_layout = QVBoxLayout()
-        self.item_name_input = QLineEdit()
-        self.item_category_input = QLineEdit()
-        self.item_category_input.setPlaceholderText("Akan ditebak AI otomatis...")
-        self.item_quantity_input = QSpinBox()
-        self.item_quantity_input.setMinimum(1)
-        self.item_condition_input = QComboBox()
-        self.item_condition_input.addItems(["Baik", "Rusak Ringan", "Rusak Berat"])
-        self.item_location_input = QLineEdit()
-        self.item_description_input = QTextEdit()
-        self.item_description_input.setFixedHeight(70)
+        right_layout.addLayout(search_layout)
+        right_layout.addWidget(self.items_table)
+        right_widget.setLayout(right_layout)
 
-        # Sambungkan fitur AI saat mengetik nama barang
-        self.item_name_input.textChanged.connect(self.auto_predict_category)
+        # Gabungkan Kiri & Kanan (Kanan diberi prioritas ruang/stretch 1)
+        main_layout.addWidget(left_widget)
+        main_layout.addWidget(right_widget, 1)
 
-        form_layout.addWidget(QLabel("Nama Barang"))
-        form_layout.addWidget(self.item_name_input)
-        form_layout.addWidget(QLabel("Kategori"))
-        form_layout.addWidget(self.item_category_input)
-        form_layout.addWidget(QLabel("Jumlah"))
-        form_layout.addWidget(self.item_quantity_input)
-        form_layout.addWidget(QLabel("Kondisi"))
-        form_layout.addWidget(self.item_condition_input)
-        form_layout.addWidget(QLabel("Lokasi"))
-        form_layout.addWidget(self.item_location_input)
-        form_layout.addWidget(QLabel("Keterangan"))
-        form_layout.addWidget(self.item_description_input)
-
-        buttons_layout = QHBoxLayout()
-        add_button = QPushButton("Tambah Barang")
-        update_button = QPushButton("Perbarui Barang")
-        delete_button = QPushButton("Hapus Barang")
-        reset_button = QPushButton("Bersihkan Form")
-        
-        # Tombol QR Code
-        generate_qr_button = QPushButton("Buat QR Code")
-        generate_qr_button.setStyleSheet("background-color: #9B59B6; color: white;")
-
-        add_button.clicked.connect(self.add_item)
-        update_button.clicked.connect(self.update_item)
-        delete_button.clicked.connect(self.delete_item)
-        reset_button.clicked.connect(self.clear_item_form)
-        generate_qr_button.clicked.connect(self.generate_qr_code)
-
-        buttons_layout.addWidget(add_button)
-        buttons_layout.addWidget(update_button)
-        buttons_layout.addWidget(delete_button)
-        buttons_layout.addWidget(reset_button)
-        buttons_layout.addWidget(generate_qr_button)
-
-        layout.addLayout(search_layout)
-        layout.addWidget(self.items_table)
-        layout.addLayout(form_layout)
-        layout.addLayout(buttons_layout)
-        page.setLayout(layout)
+        page.setLayout(main_layout)
         return page
 
-    # --- FUNGSI BONUS ---
-    def auto_predict_category(self, text):
-        kategori = self.ai.predict_category(text)
-        self.item_category_input.setText(kategori)
-
-    def generate_qr_code(self):
-        if not self.current_item_id:
-            QMessageBox.warning(self, "Peringatan", "Pilih barang dari tabel terlebih dahulu untuk dibuatkan QR Code.")
-            return
-            
-        kode = f"ITEM-{self.current_item_id}"
-        nama = self.item_name_input.text().strip()
-        
-        # Panggil pembuat QR (Sekarang mengembalikan gambar/pixmap, bukan path file)
-        pixmap = QRGenerator.get_qr_pixmap(kode, nama)
-        
-        # Bikin Jendela Pop-up
-        dialog = QDialog(self)
-        dialog.setWindowTitle(f"QR Code - {nama}")
-        layout = QVBoxLayout()
-        
-        # Tampilkan gambarnya di tengah
-        lbl_img = QLabel()
-        lbl_img.setPixmap(pixmap)
-        lbl_img.setAlignment(Qt.AlignCenter)
-        
-        # Tombol Opsional kalau user memang mau menyimpannya ke PC
-        btn_save = QPushButton("💾 Simpan Gambar (Opsional)")
-        btn_save.setStyleSheet("background-color: #3498DB; color: white;")
-        btn_save.clicked.connect(lambda: self.save_qr_manual(pixmap, kode))
-        
-        layout.addWidget(lbl_img)
-        layout.addWidget(btn_save)
-        dialog.setLayout(layout)
-        dialog.exec()
-
-    def save_qr_manual(self, pixmap, kode):
-        """Fungsi tambahan jika admin ingin menyimpan gambar QR ke harddisk"""
-        path, _ = QFileDialog.getSaveFileName(self, "Simpan QR Code", f"{kode}.png", "PNG Files (*.png)")
-        if path:
-            pixmap.save(path, "PNG")
-            QMessageBox.information(self, "Sukses", "Gambar QR Code berhasil disimpan!")
-
-    # --------------------
-
+    # ==========================================
+    # HALAMAN DATA PEMINJAMAN (LAYOUT KIRI-KANAN)
+    # ==========================================
     def create_loans_page(self):
         page = QWidget()
-        layout = QVBoxLayout()
+        main_layout = QHBoxLayout() # Layout Utama Menyamping
+
+        # ------------------------------------
+        # KIRI: Panel Form Peminjaman
+        # ------------------------------------
+        left_widget = QGroupBox("Form Peminjaman")
+        left_widget.setMaximumWidth(350)
+        left_layout = QVBoxLayout()
+
+        self.loan_item_id_input = QLineEdit()
+        self.loan_item_id_input.setReadOnly(True)
+        self.loan_item_id_input.setPlaceholderText("Pilih dari tabel...")
+        
+        self.loan_item_input = QLineEdit()
+        self.loan_item_input.setReadOnly(True)
+        
+        self.borrower_name_input = QLineEdit()
+        self.borrower_id_input = QLineEdit()
+        self.loan_quantity_input = QSpinBox()
+        self.loan_quantity_input.setMinimum(1)
+        
+        self.borrow_date_input = QDateEdit(QDate.currentDate())
+        self.borrow_date_input.setCalendarPopup(True)
+        self.return_date_input = QDateEdit(QDate.currentDate())
+        self.return_date_input.setCalendarPopup(True)
+        
+        self.loan_status_input = QComboBox()
+        self.loan_status_input.addItems(["Dipinjam", "Selesai"])
+        self.loan_notes_input = QTextEdit()
+        self.loan_notes_input.setFixedHeight(50)
+
+        left_layout.addWidget(QLabel("ID Barang (Otomatis)"))
+        left_layout.addWidget(self.loan_item_id_input)
+        left_layout.addWidget(QLabel("Nama Barang"))
+        left_layout.addWidget(self.loan_item_input)
+        left_layout.addWidget(QLabel("Nama Peminjam"))
+        left_layout.addWidget(self.borrower_name_input)
+        left_layout.addWidget(QLabel("NIM / ID Peminjam"))
+        left_layout.addWidget(self.borrower_id_input)
+        left_layout.addWidget(QLabel("Jumlah Pinjam"))
+        left_layout.addWidget(self.loan_quantity_input)
+        
+        # Tanggal bersebelahan agar hemat tempat
+        date_layout = QHBoxLayout()
+        date_box1 = QVBoxLayout()
+        date_box1.addWidget(QLabel("Tgl Pinjam"))
+        date_box1.addWidget(self.borrow_date_input)
+        date_box2 = QVBoxLayout()
+        date_box2.addWidget(QLabel("Tgl Kembali"))
+        date_box2.addWidget(self.return_date_input)
+        date_layout.addLayout(date_box1)
+        date_layout.addLayout(date_box2)
+        left_layout.addLayout(date_layout)
+
+        left_layout.addWidget(QLabel("Status Peminjaman"))
+        left_layout.addWidget(self.loan_status_input)
+        left_layout.addWidget(QLabel("Catatan"))
+        left_layout.addWidget(self.loan_notes_input)
+
+        # Tombol
+        btn_row1 = QHBoxLayout()
+        add_loan_button = QPushButton("➕ Tambah")
+        update_loan_button = QPushButton("✏️ Perbarui")
+        btn_row1.addWidget(add_loan_button)
+        btn_row1.addWidget(update_loan_button)
+
+        btn_row2 = QHBoxLayout()
+        mark_return_button = QPushButton("✅ Tandai Selesai")
+        reset_loan_form_button = QPushButton("🔄 Bersihkan")
+        btn_row2.addWidget(mark_return_button)
+        btn_row2.addWidget(reset_loan_form_button)
+
+        add_loan_button.clicked.connect(self.add_loan)
+        update_loan_button.clicked.connect(self.update_loan)
+        mark_return_button.clicked.connect(self.mark_returned)
+        reset_loan_form_button.clicked.connect(self.clear_loan_form)
+
+        left_layout.addLayout(btn_row1)
+        left_layout.addLayout(btn_row2)
+        left_layout.addStretch()
+
+        left_widget.setLayout(left_layout)
+
+        # ------------------------------------
+        # KANAN: Panel Tabel Peminjaman
+        # ------------------------------------
+        right_widget = QWidget()
+        right_layout = QVBoxLayout()
 
         filter_layout = QHBoxLayout()
         self.loan_search_input = QLineEdit()
         self.loan_search_input.setPlaceholderText("Cari nama peminjam, barang, status...")
         self.loan_filter_status = QComboBox()
         self.loan_filter_status.addItems(["Semua", "Dipinjam", "Selesai"])
-        loan_search_button = QPushButton("Cari")
+        loan_search_button = QPushButton("🔍 Cari")
         loan_reset_button = QPushButton("Reset")
 
         loan_search_button.clicked.connect(self.load_loans_table)
@@ -429,77 +472,61 @@ class MainWindow(QMainWindow):
         self.loans_table = QTableWidget()
         self.loans_table.setColumnCount(8)
         self.loans_table.setHorizontalHeaderLabels([
-            "ID",
-            "Nama Barang",
-            "Nama Peminjam",
-            "NIM/ID",
-            "Jumlah",
-            "Tanggal Pinjam",
-            "Tanggal Kembali",
-            "Status",
+            "ID", "Nama Barang", "Nama Peminjam", "NIM/ID", 
+            "Jumlah", "Tgl Pinjam", "Tgl Kembali", "Status"
         ])
         self.loans_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.loans_table.horizontalHeader().setStretchLastSection(True)
         self.loans_table.cellClicked.connect(self.load_loan_form)
 
-        form_layout = QVBoxLayout()
-        self.loan_item_input = QLineEdit()
-        self.loan_item_input.setReadOnly(True)
-        self.loan_item_id_input = QLineEdit()
-        self.loan_item_id_input.setReadOnly(True)
-        self.borrower_name_input = QLineEdit()
-        self.borrower_id_input = QLineEdit()
-        self.loan_quantity_input = QSpinBox()
-        self.loan_quantity_input.setMinimum(1)
-        self.borrow_date_input = QDateEdit(QDate.currentDate())
-        self.borrow_date_input.setCalendarPopup(True)
-        self.return_date_input = QDateEdit(QDate.currentDate())
-        self.return_date_input.setCalendarPopup(True)
-        self.loan_status_input = QComboBox()
-        self.loan_status_input.addItems(["Dipinjam", "Selesai"])
-        self.loan_notes_input = QTextEdit()
-        self.loan_notes_input.setFixedHeight(70)
+        right_layout.addLayout(filter_layout)
+        right_layout.addWidget(self.loans_table)
+        right_widget.setLayout(right_layout)
 
-        form_layout.addWidget(QLabel("ID Barang"))
-        form_layout.addWidget(self.loan_item_id_input)
-        form_layout.addWidget(QLabel("Nama Barang"))
-        form_layout.addWidget(self.loan_item_input)
-        form_layout.addWidget(QLabel("Nama Peminjam"))
-        form_layout.addWidget(self.borrower_name_input)
-        form_layout.addWidget(QLabel("NIM / ID Peminjam"))
-        form_layout.addWidget(self.borrower_id_input)
-        form_layout.addWidget(QLabel("Jumlah Peminjaman"))
-        form_layout.addWidget(self.loan_quantity_input)
-        form_layout.addWidget(QLabel("Tanggal Pinjam"))
-        form_layout.addWidget(self.borrow_date_input)
-        form_layout.addWidget(QLabel("Tanggal Kembali"))
-        form_layout.addWidget(self.return_date_input)
-        form_layout.addWidget(QLabel("Status Peminjaman"))
-        form_layout.addWidget(self.loan_status_input)
-        form_layout.addWidget(QLabel("Catatan"))
-        form_layout.addWidget(self.loan_notes_input)
+        # Gabungkan
+        main_layout.addWidget(left_widget)
+        main_layout.addWidget(right_widget, 1)
 
-        buttons_layout = QHBoxLayout()
-        add_loan_button = QPushButton("Tambah Peminjaman")
-        update_loan_button = QPushButton("Perbarui Peminjaman")
-        mark_return_button = QPushButton("Tandai Selesai")
-        reset_loan_form_button = QPushButton("Bersihkan Form")
-
-        add_loan_button.clicked.connect(self.add_loan)
-        update_loan_button.clicked.connect(self.update_loan)
-        mark_return_button.clicked.connect(self.mark_returned)
-        reset_loan_form_button.clicked.connect(self.clear_loan_form)
-
-        buttons_layout.addWidget(add_loan_button)
-        buttons_layout.addWidget(update_loan_button)
-        buttons_layout.addWidget(mark_return_button)
-        buttons_layout.addWidget(reset_loan_form_button)
-
-        layout.addLayout(filter_layout)
-        layout.addWidget(self.loans_table)
-        layout.addLayout(form_layout)
-        layout.addLayout(buttons_layout)
-        page.setLayout(layout)
+        page.setLayout(main_layout)
         return page
+
+    # --- FUNGSI-FUNGSI LOGIKA (TIDAK BERUBAH) ---
+    def auto_predict_category(self, text):
+        kategori = self.ai.predict_category(text)
+        self.item_category_input.setText(kategori)
+
+    def generate_qr_code(self):
+        if not self.current_item_id:
+            QMessageBox.warning(self, "Peringatan", "Pilih barang dari tabel terlebih dahulu untuk dibuatkan QR Code.")
+            return
+            
+        kode = f"ITEM-{self.current_item_id}"
+        nama = self.item_name_input.text().strip()
+        
+        pixmap = QRGenerator.get_qr_pixmap(kode, nama)
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"QR Code - {nama}")
+        layout = QVBoxLayout()
+        
+        lbl_img = QLabel()
+        lbl_img.setPixmap(pixmap)
+        lbl_img.setAlignment(Qt.AlignCenter)
+        
+        btn_save = QPushButton("💾 Simpan Gambar (Opsional)")
+        btn_save.setStyleSheet("background-color: #3498DB; color: white;")
+        btn_save.clicked.connect(lambda: self.save_qr_manual(pixmap, kode))
+        
+        layout.addWidget(lbl_img)
+        layout.addWidget(btn_save)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    def save_qr_manual(self, pixmap, kode):
+        path, _ = QFileDialog.getSaveFileName(self, "Simpan QR Code", f"{kode}.png", "PNG Files (*.png)")
+        if path:
+            pixmap.save(path, "PNG")
+            QMessageBox.information(self, "Sukses", "Gambar QR Code berhasil disimpan!")
 
     def logout(self):
         self.close()
@@ -531,14 +558,9 @@ class MainWindow(QMainWindow):
             return
 
         self.current_item_id = item["id"]
-        
-        # Disconnect AI sementara agar tidak menimpa kategori saat nge-klik tabel
         self.item_name_input.textChanged.disconnect(self.auto_predict_category)
-        
         self.item_name_input.setText(item["name"])
         self.item_category_input.setText(item["category"])
-        
-        # Reconnect AI
         self.item_name_input.textChanged.connect(self.auto_predict_category)
         
         self.item_quantity_input.setValue(item["quantity"])
@@ -730,7 +752,6 @@ class MainWindow(QMainWindow):
         self.clear_loan_form()
 
     def do_factory_reset(self):
-        # Munculkan peringatan super ketat sebelum menghapus
         confirm = QMessageBox.warning(
             self, 
             "PERINGATAN BAHAYA!", 
@@ -742,7 +763,6 @@ class MainWindow(QMainWindow):
             success, msg = self.db_manager.reset_database()
             if success:
                 QMessageBox.information(self, "Reset Berhasil", msg)
-                # Muat ulang semua tabel agar kosong dan grafik jadi 0
                 self.load_dashboard()
                 self.load_items_table()
                 self.load_loans_table()
