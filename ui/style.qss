@@ -1,61 +1,95 @@
 QMainWindow {
-    background-color: #F5F7FA;
+    background-color: #121212;
 }
 
-QGroupBox {
-    border: 1px solid #D1D9E6;
+QLabel {
+    color: #E0E0E0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 13px;
+}
+
+QLabel#lblTitle {
+    font-size: 24px;
+    font-weight: bold;
+    color: #FFFFFF;
+    padding-bottom: 10px;
+}
+
+QFrame#cardWidget {
+    background-color: #1E1E1E;
+    border: 1px solid #2D2D2D;
     border-radius: 8px;
-    margin-top: 8px;
-    padding: 12px;
-    background-color: white;
+    padding: 15px;
 }
 
-QGroupBox::title {
-    subcontrol-origin: margin;
-    subcontrol-position: top left;
-    padding: 0 5px;
-    color: #2C3E50;
+QLabel#lblCardTitle {
+    font-size: 12px;
+    color: #888888;
+    text-transform: uppercase;
     font-weight: bold;
 }
 
-QPushButton {
-    background-color: #4B7BEC;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 6px;
-}
-
-QPushButton:hover {
-    background-color: #3B6DD3;
-}
-
-QPushButton:pressed {
-    background-color: #345FBF;
-}
-
-QLineEdit, QTextEdit, QComboBox, QSpinBox, QDateEdit {
-    border: 1px solid #BFC9D9;
-    border-radius: 6px;
-    padding: 6px;
-    background-color: #FFFFFF;
+QLabel#lblCardValue {
+    font-size: 28px;
+    font-weight: bold;
+    color: #BB86FC; 
+    margin-top: 5px;
 }
 
 QTableWidget {
-    border: 1px solid #D1D9E6;
-    gridline-color: #E2E9F3;
-    background-color: white;
+    background-color: #1E1E1E;
+    color: #E0E0E0;
+    gridline-color: #2D2D2D;
+    border: 1px solid #2D2D2D;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+QTableWidget::item {
+    padding: 10px;
+}
+
+QTableWidget::item:selected {
+    background-color: #2D2D2D;
+    color: #BB86FC;
 }
 
 QHeaderView::section {
-    background-color: #4B7BEC;
-    color: white;
+    background-color: #252525;
+    color: #FFFFFF;
     padding: 8px;
     border: none;
+    font-weight: bold;
+    font-size: 13px;
 }
 
-#titleLabel {
-    color: #2C3E50;
-    font-size: 20px;
+QPushButton {
+    background-color: #BB86FC;
+    color: #121212;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
     font-weight: bold;
+    font-size: 13px;
+}
+
+QPushButton:hover {
+    background-color: #D7AEFB;
+}
+
+QPushButton:pressed {
+    background-color: #9965DB;
+}
+
+QLineEdit {
+    background-color: #1E1E1E;
+    color: #FFFFFF;
+    border: 1px solid #2D2D2D;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+QLineEdit:focus {
+    border: 1px solid #BB86FC;
 }
