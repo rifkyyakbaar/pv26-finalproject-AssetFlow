@@ -1,95 +1,355 @@
-QMainWindow {
-    background-color: #121212;
+/* ==========================================================================
+   AssetFlow Premium QSS - Polished Clean Soft-UI Style
+   ========================================================================== */
+
+/* Window Utama & Dialog */
+QMainWindow, QDialog {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                                stop:0 #EAF1F1, stop:1 #DFE8E8);
+    font-family: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', sans-serif;
+    color: #1A3038;
 }
 
+/* Label Umum */
 QLabel {
-    color: #E0E0E0;
-    font-family: "Segoe UI", Arial, sans-serif;
+    color: #2A4349;
     font-size: 13px;
 }
 
-QLabel#lblTitle {
-    font-size: 24px;
+/* Judul Utama */
+QLabel#titleLabel {
+    font-size: 26px;
     font-weight: bold;
-    color: #FFFFFF;
-    padding-bottom: 10px;
+    color: #0F2429;
+    padding-bottom: 12px;
 }
 
-QFrame#cardWidget {
-    background-color: #1E1E1E;
-    border: 1px solid #2D2D2D;
-    border-radius: 8px;
-    padding: 15px;
-}
-
-QLabel#lblCardTitle {
-    font-size: 12px;
-    color: #888888;
-    text-transform: uppercase;
+/* Top Mini Badges / Kapsul Statistik */
+QLabel#miniBadge {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 12px 20px;
     font-weight: bold;
+    font-size: 14px;
+    color: #2A4349;
 }
 
-QLabel#lblCardValue {
-    font-size: 28px;
-    font-weight: bold;
-    color: #BB86FC; 
-    margin-top: 5px;
+/* ==========================================================================
+   WIDGETS & CARDS (Efek Glassmorphic Lembut Premium)
+   ========================================================================== */
+QFrame#mainCard {
+    background-color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
 }
 
-QTableWidget {
-    background-color: #1E1E1E;
-    color: #E0E0E0;
-    gridline-color: #2D2D2D;
-    border: 1px solid #2D2D2D;
-    border-radius: 6px;
-    font-size: 13px;
-}
-
-QTableWidget::item {
-    padding: 10px;
-}
-
-QTableWidget::item:selected {
-    background-color: #2D2D2D;
-    color: #BB86FC;
-}
-
-QHeaderView::section {
-    background-color: #252525;
-    color: #FFFFFF;
-    padding: 8px;
-    border: none;
+QGroupBox {
+    background-color: rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    margin-top: 12px;
+    padding: 16px;
     font-weight: bold;
     font-size: 13px;
+    color: #2A4349;
 }
 
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 15px;
+    padding: 0 5px;
+    color: #008080;
+}
+
+/* ==========================================================================
+   TOMBOL (QPushButton)
+   ========================================================================== */
 QPushButton {
-    background-color: #BB86FC;
-    color: #121212;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
+    background-color: #008080;
+    color: #FFFFFF;
     font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
     font-size: 13px;
 }
 
 QPushButton:hover {
-    background-color: #D7AEFB;
+    background-color: #00A896;
 }
 
 QPushButton:pressed {
-    background-color: #9965DB;
+    background-color: #006655;
 }
 
-QLineEdit {
-    background-color: #1E1E1E;
+QPushButton#exportBtn {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                stop:0 rgba(0, 128, 128, 0.85), stop:1 rgba(0, 168, 150, 0.85));
     color: #FFFFFF;
-    border: 1px solid #2D2D2D;
-    border-radius: 4px;
-    padding: 6px 10px;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
     font-size: 13px;
 }
 
-QLineEdit:focus {
-    border: 1px solid #BB86FC;
+QPushButton#exportBtn:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                stop:0 rgba(0, 150, 150, 0.95), stop:1 rgba(0, 190, 170, 0.95));
+}
+
+QPushButton#exportBtn:pressed {
+    background: #006655;
+}
+
+QPushButton#resetBtn, QPushButton#btn_hapus_barang {
+    background-color: #E57373;
+    color: #FFFFFF;
+    border-radius: 12px;
+    padding: 10px 20px;
+}
+
+QPushButton#resetBtn:hover, QPushButton#btn_hapus_barang:hover {
+    background-color: #EF5350;
+}
+
+QPushButton#resetBtn:pressed, QPushButton#btn_hapus_barang:pressed {
+    background-color: #C62828;
+}
+
+QPushButton#btn_clear_barang, QPushButton#btn_qr_barang {
+    background-color: #6E8B93;
+    color: #FFFFFF;
+}
+
+QPushButton#btn_clear_barang:hover, QPushButton#btn_qr_barang:hover {
+    background-color: #8CAAB2;
+}
+
+QPushButton#btn_clear_barang:pressed, QPushButton#btn_qr_barang:pressed {
+    background-color: #557177;
+}
+
+/* ==========================================================================
+   INPUT FIELDS (QLineEdit, QComboBox, QTextEdit, QDateEdit)
+   ========================================================================== */
+QLineEdit, QTextEdit {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 122, 122, 0.15);
+    border-radius: 10px;
+    padding: 6px 12px;
+    color: #2A4349;
+    font-size: 13px;
+}
+
+QComboBox, QDateEdit {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 122, 122, 0.15);
+    border-radius: 10px;
+    padding: 6px 30px 6px 12px; 
+    color: #2A4349;
+    font-size: 13px;
+}
+
+QLineEdit:focus, QComboBox:focus, QTextEdit:focus, QDateEdit:focus {
+    border: 2px solid #008080;
+    background-color: #FFFFFF;
+}
+
+/* ==========================================================================
+   SPESIFIK: TOMBOL DROPDOWN & KALENDER (MENGGUNAKAN GAMBAR)
+   ========================================================================== */
+QComboBox::drop-down, QDateEdit::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 26px;
+    border-left: 1px solid rgba(0, 122, 122, 0.1);
+    border-top-right-radius: 9px;
+    border-bottom-right-radius: 9px;
+    background-color: transparent;
+}
+
+QComboBox::drop-down:hover, QDateEdit::drop-down:hover {
+    background-color: rgba(0, 128, 128, 0.1);
+}
+
+QComboBox::down-arrow {
+    image: url(ui/icons/downarrow.png); 
+    width: 10px;
+    height: 10px;
+}
+
+QDateEdit::down-arrow {
+    image: url(ui/icons/calendar.png); 
+    width: 14px;
+    height: 14px;
+}
+
+/* ==========================================================================
+   SPESIFIK: QSPINBOX CUSTOM
+   ========================================================================== */
+QSpinBox {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 122, 122, 0.15);
+    border-radius: 10px;
+    padding: 6px 30px 6px 12px; 
+    color: #2A4349;
+    font-size: 13px;
+}
+
+QSpinBox:focus {
+    border: 2px solid #008080;
+    background-color: #FFFFFF;
+}
+
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 24px;
+    height: 16px;
+    border-top-right-radius: 9px;
+    background-color: transparent;
+    border-left: 1px solid rgba(0, 122, 122, 0.1);
+    border-bottom: 1px solid rgba(0, 122, 122, 0.05);
+}
+
+QSpinBox::up-button:hover {
+    background-color: rgba(0, 128, 128, 0.1);
+}
+
+QSpinBox::up-arrow {
+    image: url(ui/icons/uparrow.png); 
+    width: 10px;
+    height: 10px;
+}
+
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 24px;
+    height: 16px;
+    border-bottom-right-radius: 9px;
+    background-color: transparent;
+    border-left: 1px solid rgba(0, 122, 122, 0.1);
+}
+
+QSpinBox::down-button:hover {
+    background-color: rgba(0, 128, 128, 0.1);
+}
+
+QSpinBox::down-arrow {
+    image: url(ui/icons/downarrow.png); 
+    width: 10px;
+    height: 10px;
+}
+
+/* ==========================================================================
+   MENU BAR & MENUS
+   ========================================================================== */
+QMenuBar {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 128, 128, 0.1);
+    font-weight: bold;
+    color: #2A4349;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 6px 12px;
+    margin: 2px;
+    border-radius: 6px;
+}
+
+QMenuBar::item:selected {
+    background-color: rgba(0, 128, 128, 0.1);
+    color: #008080;
+}
+
+QMenu {
+    background-color: #F5FAFA;
+    border: 1px solid rgba(0, 128, 128, 0.1);
+    border-radius: 8px;
+    padding: 5px;
+}
+
+QMenu::item {
+    padding: 6px 20px;
+    border-radius: 4px;
+    color: #2A4349;
+}
+
+QMenu::item:selected {
+    background-color: #008080;
+    color: #FFFFFF;
+}
+
+/* ==========================================================================
+   MODIFIKASI UTAMA: TABEL DATA (QTableWidget Premium Soft-UI)
+   ========================================================================== */
+QTableWidget {
+    background-color: rgba(255, 255, 255, 0.75);
+    alternate-background-color: rgba(234, 241, 241, 0.3); /* Zebra striping yang sangat halus */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    gridline-color: rgba(0, 128, 128, 0.03); /* Garis grid dibuat hampir samar */
+    border-radius: 18px;
+    padding: 8px;
+    font-size: 13px;
+}
+
+/* Mengatur baris data tabel */
+QTableWidget::item {
+    padding: 12px 10px;
+    color: #2A4349;
+    border-bottom: 1px solid rgba(0, 128, 128, 0.04); /* Garis pembatas baris yang bersih */
+}
+
+/* Efek feedback saat kursor melewati baris data */
+QTableWidget::item:hover {
+    background-color: rgba(0, 128, 128, 0.04);
+    color: #008080;
+}
+
+/* Baris saat diklik/dipilih (Selected State) */
+QTableWidget::item:selected {
+    background-color: rgba(0, 128, 128, 0.09); /* Teal transparan lembut */
+    color: #006666;
+    font-weight: 600;
+}
+
+/* Desain Header Atas Tabel */
+QHeaderView::section {
+    background-color: rgba(234, 241, 241, 0.85); /* Senada dengan background halaman */
+    color: #557177;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 12px;
+    border: none;
+    border-bottom: 2px solid rgba(0, 128, 128, 0.08); /* Garis tegas bawah header */
+}
+
+/* ==========================================================================
+   SCROLLBAR
+   ========================================================================== */
+QScrollBar:vertical {
+    border: none;
+    background: transparent;
+    width: 8px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(0, 128, 128, 0.2);
+    min-height: 20px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: rgba(0, 128, 128, 0.4);
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: transparent;
 }

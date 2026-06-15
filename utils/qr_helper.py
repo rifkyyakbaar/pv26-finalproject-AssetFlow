@@ -5,15 +5,15 @@ from PySide6.QtGui import QPixmap
 class QRGenerator:
     @staticmethod
     def get_qr_pixmap(kode_barang, nama_barang):
-        # 1. Rangkai teks QR Code
+        # Construct QR code data
         qr_data = f"Aplikasi AssetFlow\nKode: {kode_barang}\nNama: {nama_barang}"
         img = qrcode.make(qr_data)
         
-        # 2. Simpan gambar ke RAM (memori sementara), BUKAN ke folder
+        # Save image to in-memory buffer
         buffer = io.BytesIO()
         img.save(buffer, format="PNG")
         
-        # 3. Ubah menjadi format QPixmap agar bisa dimunculkan sebagai pop-up PySide6
+        # Convert to QPixmap for PySide6 display
         pixmap = QPixmap()
         pixmap.loadFromData(buffer.getvalue())
         return pixmap

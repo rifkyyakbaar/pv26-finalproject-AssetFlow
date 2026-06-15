@@ -4,7 +4,7 @@ import hashlib
 from datetime import datetime
 
 from PySide6.QtCore import Qt, QDate
-from PySide6.QtGui import QIcon, QAction
+from PySide6.QtGui import QIcon, QAction, QColor
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -25,6 +25,9 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QDateEdit,
     QSpinBox,
+    QGraphicsDropShadowEffect,
+    QFrame,
+    QHeaderView,
 )
 
 import matplotlib
@@ -152,19 +155,19 @@ class MainWindow(QMainWindow):
         capsule_layout.setSpacing(12)
         
         self.lbl_total_barang = QLabel("📦 Total Barang: 0")
-        self.lbl_total_barang.setObjectName("lbl_total_barang")
+        self.lbl_total_barang.setObjectName("miniBadge")
         self.lbl_total_barang.setProperty("theme", "capsule")
         
         self.lbl_tersedia = QLabel("✅ Tersedia: 0")
-        self.lbl_tersedia.setObjectName("lbl_tersedia")
+        self.lbl_tersedia.setObjectName("miniBadge")
         self.lbl_tersedia.setProperty("theme", "capsule")
         
         self.lbl_dipinjam = QLabel("🤝 Dipinjam: 0")
-        self.lbl_dipinjam.setObjectName("lbl_dipinjam")
+        self.lbl_dipinjam.setObjectName("miniBadge")
         self.lbl_dipinjam.setProperty("theme", "capsule")
         
         self.lbl_total_transaksi = QLabel("🔄 Total Transaksi: 0")
-        self.lbl_total_transaksi.setObjectName("lbl_total_transaksi")
+        self.lbl_total_transaksi.setObjectName("miniBadge")
         self.lbl_total_transaksi.setProperty("theme", "capsule")
 
         capsule_layout.addWidget(self.lbl_total_barang)
@@ -174,10 +177,27 @@ class MainWindow(QMainWindow):
         capsule_layout.addStretch()
         layout.addLayout(capsule_layout)
 
-        self.chart_container = QWidget()
-        self.chart_container.setObjectName("chartContainer")
+        # Apply capsule shadows
+        for lbl in [self.lbl_total_barang, self.lbl_tersedia, self.lbl_dipinjam, self.lbl_total_transaksi]:
+            shadow = QGraphicsDropShadowEffect(lbl)
+            shadow.setBlurRadius(15)
+            shadow.setXOffset(0)
+            shadow.setYOffset(4)
+            shadow.setColor(QColor(0, 80, 80, 15))
+            lbl.setGraphicsEffect(shadow)
+
+        self.chart_container = QFrame()
+        self.chart_container.setObjectName("mainCard")
         chart_inner_layout = QVBoxLayout(self.chart_container)
         chart_inner_layout.setContentsMargins(12, 12, 12, 12)
+
+        # Apply chart container shadow
+        shadow_chart = QGraphicsDropShadowEffect(self.chart_container)
+        shadow_chart.setBlurRadius(25)
+        shadow_chart.setXOffset(0)
+        shadow_chart.setYOffset(8)
+        shadow_chart.setColor(QColor(0, 80, 80, 15))
+        self.chart_container.setGraphicsEffect(shadow_chart)
 
         self.figure = Figure(figsize=(10, 6), dpi=100)
         self.canvas = FigureCanvas(self.figure)
@@ -187,12 +207,16 @@ class MainWindow(QMainWindow):
 
         export_layout = QHBoxLayout()
         export_items_btn = QPushButton("📄 Export Master CSV")
+        export_items_btn.setObjectName("exportBtn")
         export_loans_btn = QPushButton("📄 Export Peminjaman CSV")
+        export_loans_btn.setObjectName("exportBtn")
         export_items_pdf_btn = QPushButton("📕 Export Master PDF")
+        export_items_pdf_btn.setObjectName("exportBtn")
         export_loans_pdf_btn = QPushButton("📕 Export Peminjaman PDF")
+        export_loans_pdf_btn.setObjectName("exportBtn")
         
         reset_db_btn = QPushButton("⚠️ Factory Reset")
-        reset_db_btn.setObjectName("btnReset")
+        reset_db_btn.setObjectName("resetBtn")
 
         export_items_btn.clicked.connect(self.export_items_csv)
         export_loans_btn.clicked.connect(self.export_loans_csv)
@@ -221,16 +245,19 @@ class MainWindow(QMainWindow):
         self.figure.clear()
         semua_barang = self.db_manager.get_items()
 
-        matplotlib.rcParams['text.color'] = '#1E293B'
-        matplotlib.rcParams['axes.labelcolor'] = '#1E293B'
-        matplotlib.rcParams['xtick.color'] = '#1E293B'
-        matplotlib.rcParams['ytick.color'] = '#1E293B'
+        # Configure matplotlib style
+        matplotlib.rcParams['text.color'] = '#6E8B93'
+        matplotlib.rcParams['axes.labelcolor'] = '#6E8B93'
+        matplotlib.rcParams['xtick.color'] = '#6E8B93'
+        matplotlib.rcParams['ytick.color'] = '#6E8B93'
+        matplotlib.rcParams['font.family'] = 'sans-serif'
+        matplotlib.rcParams['font.sans-serif'] = ['Plus Jakarta Sans', 'Inter', 'Segoe UI', 'Arial']
 
         ax1 = self.figure.add_subplot(221)
-        ax1.set_facecolor('#FFFFFF')
+        ax1.set_facecolor('none')
         labels_barang = ['Tersedia', 'Dipinjam']
         sizes_barang = [summary['available_items'], summary['borrowed_items']]
-        colors_barang = ['#2ECC71', '#EF4444']
+        colors_barang = ['#00A896', '#FFA726']
 
         if sum(sizes_barang) == 0:
             ax1.text(0.5, 0.5, "Belum ada data", ha='center', va='center', fontweight='bold')
@@ -240,14 +267,14 @@ class MainWindow(QMainWindow):
             ax1.set_title('Proporsi Ketersediaan Aset', fontweight='bold', pad=10)
 
         ax2 = self.figure.add_subplot(222)
-        ax2.set_facecolor('#FFFFFF')
+        ax2.set_facecolor('none')
         labels_transaksi = ['Aktif', 'Selesai']
         sizes_transaksi = [summary['active_loans'], summary['completed_loans']]
-        colors_transaksi = ['#F1C40F', '#3498DB']
+        colors_transaksi = ['#FFA726', '#E0E0E0']
 
         bars1 = ax2.bar(labels_transaksi, sizes_transaksi, color=colors_transaksi, width=0.5, zorder=3)
         ax2.set_title('Status Peminjaman', fontweight='bold', pad=10)
-        ax2.grid(axis='y', linestyle='--', alpha=0.5, zorder=0)
+        ax2.grid(axis='y', linestyle='--', alpha=0.3, zorder=0)
         ax2.spines['top'].set_visible(False)
         ax2.spines['right'].set_visible(False)
         ax2.spines['left'].set_color('#CBD5E1')
@@ -258,7 +285,7 @@ class MainWindow(QMainWindow):
         ax2.bar_label(bars1, padding=3, fontweight='bold')
 
         ax3 = self.figure.add_subplot(212)
-        ax3.set_facecolor('#FFFFFF')
+        ax3.set_facecolor('none')
         kondisi_counts = {'Baik': 0, 'Rusak Ringan': 0, 'Rusak Berat': 0}
         for item in semua_barang:
             knd = item.get('condition', '')
@@ -267,11 +294,11 @@ class MainWindow(QMainWindow):
                 
         labels_kondisi = list(kondisi_counts.keys())
         sizes_kondisi = list(kondisi_counts.values())
-        colors_kondisi = ['#27AE60', '#F39C12', '#C0392B']
+        colors_kondisi = ['#00A896', '#FFB74D', '#E57373']
         
         bars2 = ax3.bar(labels_kondisi, sizes_kondisi, color=colors_kondisi, width=0.4, zorder=3)
         ax3.set_title('Rekapitulasi Kondisi Fisik Aset', fontweight='bold', pad=10)
-        ax3.grid(axis='y', linestyle='--', alpha=0.5, zorder=0)
+        ax3.grid(axis='y', linestyle='--', alpha=0.3, zorder=0)
         ax3.spines['top'].set_visible(False)
         ax3.spines['right'].set_visible(False)
         ax3.spines['left'].set_color('#CBD5E1')
@@ -281,62 +308,99 @@ class MainWindow(QMainWindow):
         ax3.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
         ax3.bar_label(bars2, padding=3, fontweight='bold')
 
-        self.figure.patch.set_facecolor('#FFFFFF')
+        self.figure.patch.set_facecolor('none')
         self.figure.tight_layout()
         self.canvas.draw()
 
     def create_items_page(self):
         page = QWidget()
         main_layout = QHBoxLayout()
+        main_layout.setContentsMargins(20, 20, 20, 20)  # Layout spacing
+        main_layout.setSpacing(20)
 
-        left_widget = QGroupBox("Form Input Barang")
-        left_widget.setMaximumWidth(350)
+        # Left side: Item form
+        left_widget = QFrame()
+        left_widget.setObjectName("cardWidget")  # Connect QSS style
+        left_widget.setFixedWidth(350)
         left_layout = QVBoxLayout()
+        left_layout.setContentsMargins(20, 20, 20, 20)
+        left_layout.setSpacing(12)  # Layout spacing
 
+        # Form header
+        form_title = QLabel("Form Input Barang")
+        form_title.setObjectName("formTitle")
+        form_title.setStyleSheet("font-size: 16px; font-weight: bold; color: #073B3A; margin-bottom: 5px;")
+        left_layout.addWidget(form_title)
+
+        # Form fields
         self.item_name_input = QLineEdit()
+        self.item_name_input.setPlaceholderText("Masukkan nama barang")
+        
         self.item_category_input = QLineEdit()
         self.item_category_input.setPlaceholderText("Akan ditebak AI otomatis...")
+        
         self.item_quantity_input = QSpinBox()
         self.item_quantity_input.setMinimum(1)
+        
         self.item_condition_input = QComboBox()
         self.item_condition_input.addItems(["Baik", "Rusak Ringan", "Rusak Berat"])
+        
         self.item_location_input = QLineEdit()
+        self.item_location_input.setPlaceholderText("Lokasi penyimpanan")
+        
         self.item_description_input = QTextEdit()
         self.item_description_input.setFixedHeight(70)
+        self.item_description_input.setPlaceholderText("Keterangan atau spesifikasi tambahan...")
 
         self.item_name_input.textChanged.connect(self.auto_predict_category)
 
-        left_layout.addWidget(QLabel("Nama Barang"))
-        left_layout.addWidget(self.item_name_input)
-        left_layout.addWidget(QLabel("Kategori"))
-        left_layout.addWidget(self.item_category_input)
-        left_layout.addWidget(QLabel("Jumlah"))
-        left_layout.addWidget(self.item_quantity_input)
-        left_layout.addWidget(QLabel("Kondisi"))
-        left_layout.addWidget(self.item_condition_input)
-        left_layout.addWidget(QLabel("Lokasi"))
-        left_layout.addWidget(self.item_location_input)
-        left_layout.addWidget(QLabel("Keterangan"))
-        left_layout.addWidget(self.item_description_input)
+        # Helper to add form labels
+        def add_form_row(label_text, widget):
+            lbl = QLabel(label_text)
+            lbl.setObjectName("secondaryText")
+            lbl.setStyleSheet("font-weight: 600; color: #557177; font-size: 11px;")
+            left_layout.addWidget(lbl)
+            left_layout.addWidget(widget)
 
+        add_form_row("Nama Barang", self.item_name_input)
+        add_form_row("Kategori", self.item_category_input)
+        add_form_row("Jumlah", self.item_quantity_input)
+        add_form_row("Kondisi", self.item_condition_input)
+        add_form_row("Lokasi", self.item_location_input)
+        add_form_row("Keterangan", self.item_description_input)
+
+        # Spacing
+        left_layout.addStrut(10)
+
+        # Action buttons row 1
         btn_row1 = QHBoxLayout()
         add_button = QPushButton("➕ Tambah")
-        add_button.setObjectName("btn_tambah_barang")
+        add_button.setObjectName("primaryBtn")  # Apply QSS style
+        
         update_button = QPushButton("✏️ Perbarui")
-        update_button.setObjectName("btn_update_barang")
+        update_button.setObjectName("secondaryActionBtn")
+        update_button.setStyleSheet("background-color: rgba(0, 122, 122, 0.1); color: #007A7A; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        
         btn_row1.addWidget(add_button)
         btn_row1.addWidget(update_button)
 
+        # Action buttons row 2
         btn_row2 = QHBoxLayout()
         delete_button = QPushButton("🗑️ Hapus")
-        delete_button.setObjectName("btn_hapus_barang")
+        delete_button.setObjectName("btn_hapus_barang")  # Apply QSS style
+        delete_button.setStyleSheet("background-color: #E57373; color: white; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        
         reset_button = QPushButton("🔄 Bersihkan")
-        reset_button.setObjectName("btn_clear_barang")
+        reset_button.setObjectName("resetFormBtn")
+        reset_button.setStyleSheet("background-color: #CFD8DC; color: #37474F; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        
         btn_row2.addWidget(delete_button)
         btn_row2.addWidget(reset_button)
 
+        # QR Code button
         generate_qr_button = QPushButton("🔲 Buat QR Code")
         generate_qr_button.setObjectName("btn_qr_barang")
+        generate_qr_button.setStyleSheet("background-color: #455A64; color: white; font-weight: bold; border: none; border-radius: 10px; padding: 12px; margin-top: 5px;")
 
         add_button.clicked.connect(self.add_item)
         update_button.clicked.connect(self.update_item)
@@ -351,16 +415,30 @@ class MainWindow(QMainWindow):
 
         left_widget.setLayout(left_layout)
 
+        # Right side: Search and table
         right_widget = QWidget()
         right_layout = QVBoxLayout()
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(15)
 
+        # Search bar layout
         search_layout = QHBoxLayout()
+        search_layout.setSpacing(10)
+        
         self.item_search_input = QLineEdit()
         self.item_search_input.setPlaceholderText("Cari nama, kategori, kondisi, lokasi...")
+        
         self.item_filter_status = QComboBox()
         self.item_filter_status.addItems(["Semua", "Tersedia", "Dipinjam"])
+        self.item_filter_status.setFixedWidth(120)
+        
         search_button = QPushButton("🔍 Cari")
+        search_button.setObjectName("primaryBtn")
+        search_button.setStyleSheet("padding: 8px 16px; font-weight: bold;")
+        
         clear_search_button = QPushButton("Reset")
+        clear_search_button.setObjectName("resetFormBtn")
+        clear_search_button.setStyleSheet("background-color: #CFD8DC; color: #37474F; padding: 8px 16px; font-weight: bold; border: none; border-radius: 10px;")
 
         search_button.clicked.connect(self.load_items_table)
         clear_search_button.clicked.connect(self.reset_item_search)
@@ -370,18 +448,45 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(search_button)
         search_layout.addWidget(clear_search_button)
 
+        # Data table
         self.items_table = QTableWidget()
+        self.items_table.setObjectName("mainTable")  # Apply QSS style
         self.items_table.setColumnCount(7)
         self.items_table.setHorizontalHeaderLabels([
             "ID", "Nama Barang", "Kategori", "Jumlah", "Kondisi", "Lokasi", "Status"
         ])
         self.items_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.items_table.horizontalHeader().setStretchLastSection(True)
+        
+        # Configure table focus and grid
+        self.items_table.setFocusPolicy(Qt.NoFocus)
+        self.items_table.setShowGrid(False)
+        
+        # Table structure
+        self.items_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.items_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.items_table.horizontalHeader().setMinimumSectionSize(95)
+        self.items_table.verticalHeader().setVisible(False)  # Hide vertical header
+        self.items_table.setAlternatingRowColors(True)       # Enable alternating row colors
         self.items_table.cellClicked.connect(self.load_item_form)
 
         right_layout.addLayout(search_layout)
         right_layout.addWidget(self.items_table)
         right_widget.setLayout(right_layout)
+
+        # Apply drop shadow
+        shadow_left = QGraphicsDropShadowEffect(left_widget)
+        shadow_left.setBlurRadius(30)
+        shadow_left.setXOffset(0)
+        shadow_left.setYOffset(10)
+        shadow_left.setColor(QColor(0, 80, 80, 12))  # Set shadow color
+        left_widget.setGraphicsEffect(shadow_left)
+
+        shadow_table = QGraphicsDropShadowEffect(self.items_table)
+        shadow_table.setBlurRadius(25)
+        shadow_table.setXOffset(0)
+        shadow_table.setYOffset(8)
+        shadow_table.setColor(QColor(0, 80, 80, 8))
+        self.items_table.setGraphicsEffect(shadow_table)
 
         main_layout.addWidget(left_widget)
         main_layout.addWidget(right_widget, 1)
@@ -392,22 +497,41 @@ class MainWindow(QMainWindow):
     def create_loans_page(self):
         page = QWidget()
         main_layout = QHBoxLayout()
+        main_layout.setContentsMargins(20, 20, 20, 20)  # Layout spacing
+        main_layout.setSpacing(20)
 
-        left_widget = QGroupBox("Form Peminjaman")
-        left_widget.setMaximumWidth(350)
+        # Left side: Loan form
+        left_widget = QFrame()
+        left_widget.setObjectName("cardWidget")  # Connect QSS style
+        left_widget.setFixedWidth(350)
         left_layout = QVBoxLayout()
+        left_layout.setContentsMargins(20, 20, 20, 20)
+        left_layout.setSpacing(12)  # Layout spacing
 
+        # Form header
+        form_title = QLabel("Form Peminjaman")
+        form_title.setObjectName("formTitle")
+        form_title.setStyleSheet("font-size: 16px; font-weight: bold; color: #073B3A; margin-bottom: 5px;")
+        left_layout.addWidget(form_title)
+
+        # Form fields
         self.loan_item_id_input = QLineEdit()
         self.loan_item_id_input.setReadOnly(True)
         self.loan_item_id_input.setPlaceholderText("Pilih dari tabel...")
         
         self.loan_item_input = QLineEdit()
         self.loan_item_input.setReadOnly(True)
+        self.loan_item_input.setPlaceholderText("Nama barang otomatis...")
         
         self.borrower_name_input = QLineEdit()
+        self.borrower_name_input.setPlaceholderText("Masukkan nama peminjam")
+        
         self.borrower_id_input = QLineEdit()
+        self.borrower_id_input.setPlaceholderText("Masukkan NIM atau ID")
+
         self.loan_quantity_input = QSpinBox()
         self.loan_quantity_input.setMinimum(1)
+        self.loan_quantity_input.setHeight(36) if hasattr(self.loan_quantity_input, 'setHeight') else None
         
         self.borrow_date_input = QDateEdit(QDate.currentDate())
         self.borrow_date_input.setCalendarPopup(True)
@@ -416,45 +540,69 @@ class MainWindow(QMainWindow):
         
         self.loan_status_input = QComboBox()
         self.loan_status_input.addItems(["Dipinjam", "Selesai"])
-        self.loan_notes_input = QTextEdit()
-        self.loan_notes_input.setFixedHeight(50)
-
-        left_layout.addWidget(QLabel("ID Barang (Otomatis)"))
-        left_layout.addWidget(self.loan_item_id_input)
-        left_layout.addWidget(QLabel("Nama Barang"))
-        left_layout.addWidget(self.loan_item_input)
-        left_layout.addWidget(QLabel("Nama Peminjam"))
-        left_layout.addWidget(self.borrower_name_input)
-        left_layout.addWidget(QLabel("NIM / ID Peminjam"))
-        left_layout.addWidget(self.borrower_id_input)
-        left_layout.addWidget(QLabel("Jumlah Pinjam"))
-        left_layout.addWidget(self.loan_quantity_input)
         
+        self.loan_notes_input = QTextEdit()
+        self.loan_notes_input.setFixedHeight(60)
+        self.loan_notes_input.setPlaceholderText("Catatan tambahan jika ada...")
+
+        # Helper to add form labels
+        def create_labeled_widget(label_text, widget):
+            lbl = QLabel(label_text)
+            lbl.setObjectName("secondaryText")
+            lbl.setStyleSheet("font-weight: 600; color: #557177; font-size: 11px;")
+            left_layout.addWidget(lbl)
+            left_layout.addWidget(widget)
+
+        create_labeled_widget("ID Barang (Otomatis)", self.loan_item_id_input)
+        create_labeled_widget("Nama Barang", self.loan_item_input)
+        create_labeled_widget("Nama Peminjam", self.borrower_name_input)
+        create_labeled_widget("NIM / ID Peminjam", self.borrower_id_input)
+        create_labeled_widget("Jumlah Pinjam", self.loan_quantity_input)
+        
+        # Date fields layout
         date_layout = QHBoxLayout()
         date_box1 = QVBoxLayout()
-        date_box1.addWidget(QLabel("Tgl Pinjam"))
+        lbl_tgl_pinjam = QLabel("Tgl Pinjam")
+        lbl_tgl_pinjam.setStyleSheet("font-weight: 600; color: #557177; font-size: 11px;")
+        date_box1.addWidget(lbl_tgl_pinjam)
         date_box1.addWidget(self.borrow_date_input)
+        
         date_box2 = QVBoxLayout()
-        date_box2.addWidget(QLabel("Tgl Kembali"))
+        lbl_tgl_kembali = QLabel("Tgl Kembali")
+        lbl_tgl_kembali.setStyleSheet("font-weight: 600; color: #557177; font-size: 11px;")
+        date_box2.addWidget(lbl_tgl_kembali)
         date_box2.addWidget(self.return_date_input)
+        
         date_layout.addLayout(date_box1)
         date_layout.addLayout(date_box2)
         left_layout.addLayout(date_layout)
 
-        left_layout.addWidget(QLabel("Status Peminjaman"))
-        left_layout.addWidget(self.loan_status_input)
-        left_layout.addWidget(QLabel("Catatan"))
-        left_layout.addWidget(self.loan_notes_input)
+        create_labeled_widget("Status Peminjaman", self.loan_status_input)
+        create_labeled_widget("Catatan", self.loan_notes_input)
 
+        # Action buttons
+        left_layout.addStrut(10) # Spacing
+        
         btn_row1 = QHBoxLayout()
         add_loan_button = QPushButton("➕ Tambah")
+        add_loan_button.setObjectName("primaryBtn")  # Apply QSS style
+        
         update_loan_button = QPushButton("✏️ Perbarui")
+        update_loan_button.setObjectName("secondaryActionBtn") # Apply QSS style
+        update_loan_button.setStyleSheet("background-color: rgba(0, 122, 122, 0.1); color: #007A7A; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        
         btn_row1.addWidget(add_loan_button)
         btn_row1.addWidget(update_loan_button)
 
         btn_row2 = QHBoxLayout()
         mark_return_button = QPushButton("✅ Tandai Selesai")
+        mark_return_button.setObjectName("successBtn") # Apply QSS style
+        mark_return_button.setStyleSheet("background-color: #26A69A; color: white; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        
         reset_loan_form_button = QPushButton("🔄 Bersihkan")
+        reset_loan_form_button.setObjectName("resetFormBtn") # Apply QSS style
+        reset_loan_form_button.setStyleSheet("background-color: #CFD8DC; color: #37474F; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        
         btn_row2.addWidget(mark_return_button)
         btn_row2.addWidget(reset_loan_form_button)
 
@@ -469,16 +617,30 @@ class MainWindow(QMainWindow):
 
         left_widget.setLayout(left_layout)
 
+        # Right side: Search and table
         right_widget = QWidget()
         right_layout = QVBoxLayout()
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(15)
 
+        # Search bar layout
         filter_layout = QHBoxLayout()
+        filter_layout.setSpacing(10)
+        
         self.loan_search_input = QLineEdit()
         self.loan_search_input.setPlaceholderText("Cari nama peminjam, barang, status...")
+        
         self.loan_filter_status = QComboBox()
         self.loan_filter_status.addItems(["Semua", "Dipinjam", "Selesai"])
+        self.loan_filter_status.setFixedWidth(120)
+        
         loan_search_button = QPushButton("🔍 Cari")
+        loan_search_button.setObjectName("primaryBtn")
+        loan_search_button.setStyleSheet("padding: 8px 16px; font-weight: bold;")
+        
         loan_reset_button = QPushButton("Reset")
+        loan_reset_button.setObjectName("resetFormBtn")
+        loan_reset_button.setStyleSheet("background-color: #CFD8DC; color: #37474F; padding: 8px 16px; font-weight: bold; border: none; border-radius: 10px;")
 
         loan_search_button.clicked.connect(self.load_loans_table)
         loan_reset_button.clicked.connect(self.reset_loan_search)
@@ -488,19 +650,46 @@ class MainWindow(QMainWindow):
         filter_layout.addWidget(loan_search_button)
         filter_layout.addWidget(loan_reset_button)
 
+        # Data table
         self.loans_table = QTableWidget()
+        self.loans_table.setObjectName("mainTable") # Apply QSS style
         self.loans_table.setColumnCount(8)
         self.loans_table.setHorizontalHeaderLabels([
             "ID", "Nama Barang", "Nama Peminjam", "NIM/ID", 
             "Jumlah", "Tgl Pinjam", "Tgl Kembali", "Status"
         ])
         self.loans_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.loans_table.horizontalHeader().setStretchLastSection(True)
+        
+        # Configure table focus and grid
+        self.loans_table.setFocusPolicy(Qt.NoFocus)
+        self.loans_table.setShowGrid(False)
+        
+        # Table structure
+        self.loans_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.loans_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.loans_table.horizontalHeader().setMinimumSectionSize(100)
+        self.loans_table.verticalHeader().setVisible(False) # Hide vertical header
+        self.loans_table.setAlternatingRowColors(True) # Enable alternating row colors
         self.loans_table.cellClicked.connect(self.load_loan_form)
 
         right_layout.addLayout(filter_layout)
         right_layout.addWidget(self.loans_table)
         right_widget.setLayout(right_layout)
+
+        # Apply drop shadow
+        shadow_left = QGraphicsDropShadowEffect(left_widget)
+        shadow_left.setBlurRadius(30)
+        shadow_left.setXOffset(0)
+        shadow_left.setYOffset(10)
+        shadow_left.setColor(QColor(0, 80, 80, 12))  # Set shadow color
+        left_widget.setGraphicsEffect(shadow_left)
+
+        shadow_table = QGraphicsDropShadowEffect(self.loans_table)
+        shadow_table.setBlurRadius(25)
+        shadow_table.setXOffset(0)
+        shadow_table.setYOffset(8)
+        shadow_table.setColor(QColor(0, 80, 80, 8))
+        self.loans_table.setGraphicsEffect(shadow_table)
 
         main_layout.addWidget(left_widget)
         main_layout.addWidget(right_widget, 1)

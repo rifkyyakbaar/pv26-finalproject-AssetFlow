@@ -1,0 +1,36 @@
+# --- Kompilasi Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.env
+.venv
+
+# Mengabaikan file database SQLite agar data praktikum/testing tidak bocor ke Git
+*.db
+*.sqlite3
+database/assetflow.db
+
+# Mengabaikan QR Code atau file log ekspor yang digenerate saat aplikasi berjalan
+*.csv
+*.pdf
+ui/icons/qr_*.png
+*.qr.png
+
+# --- Editor / IDE & OS Cache ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Grafik / Matplotlib Cache ---
+.matplotlib/

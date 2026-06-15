@@ -272,29 +272,23 @@ class DatabaseManager:
             "completed_loans": completed_loans,
         }
 
-    # KODE RESET DATABASE YANG SUDAH DIPERBAIKI 100%
     def reset_database(self):
-        """Menghapus semua data secara dinamis tanpa peduli apa nama tabelnya"""
+        """Clear database tables except user accounts"""
         try:
             cursor = self.connection.cursor()
-            
-            # 1. Cari tahu apa saja nama tabel yang ada di dalam database
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
             tables = cursor.fetchall()
             
             for table in tables:
                 table_name = table["name"]
-                
-                # 2. Bersihkan semua tabel KECUALI tabel akun login 'users'
                 if table_name.lower() not in ['users', 'sqlite_sequence']: 
                     cursor.execute(f"DELETE FROM {table_name}")
-                    # Reset ID-nya kembali ke 1
                     try:
                         cursor.execute(f"DELETE FROM sqlite_sequence WHERE name='{table_name}'")
                     except:
-                        pass # Abaikan jika tabel tidak punya AutoIncrement
+                        pass
             
             self.connection.commit()
-            return True, "Sistem telah dikembalikan ke pengaturan awal pabrik (Kosong)."
+            return True, "Database successfully reset."
         except Exception as e:
-            return False, f"Gagal mereset database! Error: {e}"
+            return False, f"Failed to reset database: {e}"

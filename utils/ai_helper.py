@@ -3,7 +3,7 @@ from sklearn.naive_bayes import MultinomialNB
 
 class CategoryPredictor:
     def __init__(self):
-        # 1. Dataset Latihan Sederhana (Bisa ditambah nanti)
+        # Training dataset
         self.contoh_barang = [
             "Laptop Asus", "Mouse Logitech", "Keyboard Mekanikal", "Monitor LG", "Proyektor Epson", "Kabel HDMI",  # Elektronik
             "Meja Kayu", "Kursi Kantor", "Lemari Besi", "Rak Buku", "Papan Tulis",                               # Furnitur
@@ -15,18 +15,18 @@ class CategoryPredictor:
             "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis"
         ]
         
-        # 2. Siapkan dan Latih Model AI
+        # Initialize and train the model
         self.vectorizer = CountVectorizer()
         self.model = MultinomialNB()
         self._train_model()
 
     def _train_model(self):
-        # Mengubah teks menjadi angka agar dipahami AI, lalu dilatih
+        # Vectorize text features and train model
         X = self.vectorizer.fit_transform(self.contoh_barang)
         self.model.fit(X, self.kategori_barang)
 
     def predict_category(self, nama_barang):
-        """Fungsi ini akan dipanggil saat admin mengetik nama barang"""
+        """Predict category based on item name"""
         if not nama_barang.strip():
             return "Lainnya"
         try:
