@@ -28,6 +28,10 @@ from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
     QFrame,
     QHeaderView,
+    QSizePolicy,
+    QScrollArea,
+    QCompleter,
+    QTabWidget,
 )
 
 import matplotlib
@@ -46,38 +50,165 @@ DB_PATH = os.path.join(BASE_DIR, "database", "assetflow.db")
 STYLE_PATH = os.path.join(BASE_DIR, "ui", "style.qss")
 
 
+class ItemBrowseDialog(QDialog):
+    def __init__(self, db_manager, parent=None):
+        super().__init__(parent)
+        self.db_manager = db_manager
+        self.selected_item_id = None
+        self.selected_item_name = None
+        self.setWindowTitle("Katalog Barang - Pilih Barang")
+        self.resize(700, 450)
+        self.init_ui()
+        
+    def init_ui(self):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(10)
+        
+        # Header/Title
+        title = QLabel("Katalog Barang Tersedia")
+        title.setStyleSheet("font-size: 16px; font-weight: bold; color: #073B3A;")
+        layout.addWidget(title)
+        
+        # Search bar
+        search_layout = QHBoxLayout()
+        search_layout.setSpacing(8)
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Cari nama barang, kategori, lokasi, kondisi...")
+        self.search_input.setMinimumHeight(30)
+        self.search_input.textChanged.connect(self.load_items)
+        search_layout.addWidget(self.search_input)
+        layout.addLayout(search_layout)
+        
+        # Table of items
+        self.table = QTableWidget()
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels(["ID", "Nama Barang", "Kategori", "Stok Tersedia", "Kondisi", "Lokasi"])
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SingleSelection)
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.verticalHeader().setVisible(False)
+        self.table.setAlternatingRowColors(True)
+        self.table.cellDoubleClicked.connect(self.select_item_and_close)
+        
+        layout.addWidget(self.table)
+        
+        # Buttons layout
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
+        btn_layout.addStretch()
+        
+        self.btn_select = QPushButton("Pilih Barang")
+        self.btn_select.setObjectName("primaryBtn")
+        self.btn_select.setStyleSheet("padding: 8px 20px; font-weight: bold;")
+        self.btn_select.clicked.connect(self.select_item_and_close)
+        
+        self.btn_cancel = QPushButton("Batal")
+        self.btn_cancel.setObjectName("resetFormBtn")
+        self.btn_cancel.setStyleSheet("background-color: #CFD8DC; color: #37474F; padding: 8px 20px; font-weight: bold; border: none; border-radius: 10px;")
+        self.btn_cancel.clicked.connect(self.reject)
+        
+        btn_layout.addWidget(self.btn_cancel)
+        btn_layout.addWidget(self.btn_select)
+        layout.addLayout(btn_layout)
+        
+        self.setLayout(layout)
+        self.load_items()
+        
+    def load_items(self):
+        query = self.search_input.text().strip()
+        items = self.db_manager.search_items(query, "Tersedia")
+        
+        # Filter: only display items that have quantity > 0
+        filtered_items = [item for item in items if item["quantity"] > 0]
+        
+        self.table.setRowCount(len(filtered_items))
+        for row_idx, item in enumerate(filtered_items):
+            self.table.setItem(row_idx, 0, QTableWidgetItem(str(item["id"])))
+            self.table.setItem(row_idx, 1, QTableWidgetItem(item["name"]))
+            self.table.setItem(row_idx, 2, QTableWidgetItem(item["category"]))
+            self.table.setItem(row_idx, 3, QTableWidgetItem(str(item["quantity"])))
+            self.table.setItem(row_idx, 4, QTableWidgetItem(item["condition"]))
+            self.table.setItem(row_idx, 5, QTableWidgetItem(item["location"]))
+            
+    def select_item_and_close(self):
+        selected_ranges = self.table.selectedRanges()
+        if not selected_ranges:
+            QMessageBox.warning(self, "Peringatan", "Silakan pilih salah satu barang terlebih dahulu.")
+            return
+        row = selected_ranges[0].topRow()
+        self.selected_item_id = int(self.table.item(row, 0).text())
+        self.selected_item_name = self.table.item(row, 1).text()
+        self.accept()
+
+
 class LoginDialog(QDialog):
     def __init__(self, db_manager):
         super().__init__()
         self.db_manager = db_manager
         self.setWindowTitle("AssetFlow - Login")
-        self.setFixedSize(360, 220)
+        self.setFixedSize(360, 340)
         self.init_ui()
 
     def init_ui(self):
-        layout = QVBoxLayout()
-
-        title = QLabel("AssetFlow Admin Login")
+        # Dialog main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(15, 15, 15, 15)
+        
+        # Vertical card wrapper
+        card = QFrame()
+        card.setObjectName("mainCard") # Matches the soft-UI glassmorphism card style in style.qss!
+        
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(20, 25, 20, 25)
+        card_layout.setSpacing(12)
+        
+        # Logo/Icon
+        logo = QLabel("📦")
+        logo.setStyleSheet("font-size: 40px; margin-bottom: 0px;")
+        logo.setAlignment(Qt.AlignCenter)
+        
+        # Centered app name
+        title = QLabel("AssetFlow")
+        title.setStyleSheet("font-size: 20px; font-weight: bold; color: #073B3A; margin-bottom: 8px;")
         title.setAlignment(Qt.AlignCenter)
-        title.setObjectName("titleLabel")
 
+        # Placeholders
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("Username")
+        self.username_input.setMinimumHeight(32)
 
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("Password")
         self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.setMinimumHeight(32)
 
+        # Login button
         login_button = QPushButton("Masuk")
+        login_button.setObjectName("primaryBtn")
+        login_button.setMinimumHeight(34)
+        login_button.setStyleSheet("font-weight: bold; font-size: 13px; margin-top: 8px;")
         login_button.clicked.connect(self.try_login)
 
-        layout.addWidget(title)
-        layout.addWidget(self.username_input)
-        layout.addWidget(self.password_input)
-        layout.addWidget(login_button)
-        layout.addStretch()
+        # Add to card layout
+        card_layout.addWidget(logo)
+        card_layout.addWidget(title)
+        card_layout.addWidget(self.username_input)
+        card_layout.addWidget(self.password_input)
+        card_layout.addWidget(login_button)
+        card_layout.addStretch()
 
-        self.setLayout(layout)
+        # Drop shadow for card
+        shadow = QGraphicsDropShadowEffect(card)
+        shadow.setBlurRadius(25)
+        shadow.setXOffset(0)
+        shadow.setYOffset(8)
+        shadow.setColor(QColor(0, 80, 80, 15))
+        card.setGraphicsEffect(shadow)
+
+        main_layout.addWidget(card)
 
     def try_login(self):
         username = self.username_input.text().strip()
@@ -100,7 +231,8 @@ class MainWindow(QMainWindow):
         self.ai = CategoryPredictor()
         
         self.setWindowTitle("AssetFlow - Aplikasi Manajemen Aset")
-        self.resize(1200, 780)
+        self.resize(1160, 700)
+        self.setMinimumSize(1080, 700)
         self.current_item_id = None
         self.current_loan_id = None
         self.init_ui()
@@ -135,9 +267,9 @@ class MainWindow(QMainWindow):
         nav_menu.addSeparator() 
         action_logout = nav_menu.addAction("🚪 Logout Sistem")
         
-        action_dashboard.triggered.connect(lambda: self.stack.setCurrentWidget(self.dashboard_page))
-        action_items.triggered.connect(lambda: self.stack.setCurrentWidget(self.items_page))
-        action_loans.triggered.connect(lambda: self.stack.setCurrentWidget(self.loans_page))
+        action_dashboard.triggered.connect(self.show_dashboard_page)
+        action_items.triggered.connect(self.show_items_page)
+        action_loans.triggered.connect(self.show_loans_page)
         action_logout.triggered.connect(self.logout)
 
     def create_dashboard_page(self):
@@ -315,16 +447,16 @@ class MainWindow(QMainWindow):
     def create_items_page(self):
         page = QWidget()
         main_layout = QHBoxLayout()
-        main_layout.setContentsMargins(20, 20, 20, 20)  # Layout spacing
-        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(12, 12, 12, 12)  # Layout spacing
+        main_layout.setSpacing(15)
 
         # Left side: Item form
         left_widget = QFrame()
         left_widget.setObjectName("cardWidget")  # Connect QSS style
-        left_widget.setFixedWidth(350)
+        left_widget.setMinimumWidth(280)
         left_layout = QVBoxLayout()
-        left_layout.setContentsMargins(20, 20, 20, 20)
-        left_layout.setSpacing(12)  # Layout spacing
+        left_layout.setContentsMargins(10, 10, 10, 10)
+        left_layout.setSpacing(3)  # Tight spacing
 
         # Form header
         form_title = QLabel("Form Input Barang")
@@ -349,7 +481,7 @@ class MainWindow(QMainWindow):
         self.item_location_input.setPlaceholderText("Lokasi penyimpanan")
         
         self.item_description_input = QTextEdit()
-        self.item_description_input.setFixedHeight(70)
+        self.item_description_input.setFixedHeight(45)
         self.item_description_input.setPlaceholderText("Keterangan atau spesifikasi tambahan...")
 
         self.item_name_input.textChanged.connect(self.auto_predict_category)
@@ -370,22 +502,27 @@ class MainWindow(QMainWindow):
         add_form_row("Keterangan", self.item_description_input)
 
         # Spacing
-        left_layout.addStrut(10)
+        left_layout.addSpacing(4)
 
         # Action buttons row 1
         btn_row1 = QHBoxLayout()
+        btn_row1.setSpacing(10)
         add_button = QPushButton("➕ Tambah")
         add_button.setObjectName("primaryBtn")  # Apply QSS style
         
         update_button = QPushButton("✏️ Perbarui")
         update_button.setObjectName("secondaryActionBtn")
         update_button.setStyleSheet("background-color: rgba(0, 122, 122, 0.1); color: #007A7A; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        for button in (add_button, update_button):
+            button.setMinimumHeight(30)
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         btn_row1.addWidget(add_button)
         btn_row1.addWidget(update_button)
 
         # Action buttons row 2
         btn_row2 = QHBoxLayout()
+        btn_row2.setSpacing(10)
         delete_button = QPushButton("🗑️ Hapus")
         delete_button.setObjectName("btn_hapus_barang")  # Apply QSS style
         delete_button.setStyleSheet("background-color: #E57373; color: white; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
@@ -393,6 +530,9 @@ class MainWindow(QMainWindow):
         reset_button = QPushButton("🔄 Bersihkan")
         reset_button.setObjectName("resetFormBtn")
         reset_button.setStyleSheet("background-color: #CFD8DC; color: #37474F; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        for button in (delete_button, reset_button):
+            button.setMinimumHeight(30)
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         btn_row2.addWidget(delete_button)
         btn_row2.addWidget(reset_button)
@@ -401,6 +541,8 @@ class MainWindow(QMainWindow):
         generate_qr_button = QPushButton("🔲 Buat QR Code")
         generate_qr_button.setObjectName("btn_qr_barang")
         generate_qr_button.setStyleSheet("background-color: #455A64; color: white; font-weight: bold; border: none; border-radius: 10px; padding: 12px; margin-top: 5px;")
+        generate_qr_button.setMinimumHeight(30)
+        generate_qr_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         add_button.clicked.connect(self.add_item)
         update_button.clicked.connect(self.update_item)
@@ -411,9 +553,16 @@ class MainWindow(QMainWindow):
         left_layout.addLayout(btn_row1)
         left_layout.addLayout(btn_row2)
         left_layout.addWidget(generate_qr_button)
-        left_layout.addStretch()
 
         left_widget.setLayout(left_layout)
+
+        left_scroll = QScrollArea()
+        left_scroll.setWidgetResizable(True)
+        left_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        left_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        left_scroll.setFrameShape(QFrame.NoFrame)
+        left_scroll.setMinimumWidth(300)
+        left_scroll.setWidget(left_widget)
 
         # Right side: Search and table
         right_widget = QWidget()
@@ -488,8 +637,8 @@ class MainWindow(QMainWindow):
         shadow_table.setColor(QColor(0, 80, 80, 8))
         self.items_table.setGraphicsEffect(shadow_table)
 
-        main_layout.addWidget(left_widget)
-        main_layout.addWidget(right_widget, 1)
+        main_layout.addWidget(left_scroll, 1)
+        main_layout.addWidget(right_widget, 2)
 
         page.setLayout(main_layout)
         return page
@@ -497,16 +646,16 @@ class MainWindow(QMainWindow):
     def create_loans_page(self):
         page = QWidget()
         main_layout = QHBoxLayout()
-        main_layout.setContentsMargins(20, 20, 20, 20)  # Layout spacing
-        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(12, 12, 12, 12)  # Layout spacing
+        main_layout.setSpacing(15)
 
         # Left side: Loan form
         left_widget = QFrame()
         left_widget.setObjectName("cardWidget")  # Connect QSS style
-        left_widget.setFixedWidth(350)
+        left_widget.setMinimumWidth(280)
         left_layout = QVBoxLayout()
-        left_layout.setContentsMargins(20, 20, 20, 20)
-        left_layout.setSpacing(12)  # Layout spacing
+        left_layout.setContentsMargins(10, 10, 10, 10)
+        left_layout.setSpacing(3)  # Tight spacing
 
         # Form header
         form_title = QLabel("Form Peminjaman")
@@ -517,12 +666,39 @@ class MainWindow(QMainWindow):
         # Form fields
         self.loan_item_id_input = QLineEdit()
         self.loan_item_id_input.setReadOnly(True)
-        self.loan_item_id_input.setPlaceholderText("Pilih dari tabel...")
+        self.loan_item_id_input.setPlaceholderText("ID Otomatis...")
         
-        self.loan_item_input = QLineEdit()
-        self.loan_item_input.setReadOnly(True)
-        self.loan_item_input.setPlaceholderText("Nama barang otomatis...")
+        # Select item layout with browse button
+        selector_container = QWidget()
+        selector_layout = QHBoxLayout(selector_container)
+        selector_layout.setContentsMargins(0, 0, 0, 0)
+        selector_layout.setSpacing(5)
         
+        self.loan_item_selector = QComboBox()
+        self.loan_item_selector.setMinimumHeight(30)
+        self.loan_item_selector.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.loan_item_selector.setEditable(True)
+        self.loan_item_selector.setInsertPolicy(QComboBox.NoInsert)
+        self.loan_item_selector.lineEdit().setPlaceholderText("Ketik/pilih nama barang...")
+        self.loan_item_selector.currentIndexChanged.connect(self.on_loan_item_changed)
+        
+        # Enable autocomplete filter mode
+        completer = self.loan_item_selector.completer()
+        if completer:
+            completer.setFilterMode(Qt.MatchContains)
+            completer.setCompletionMode(QCompleter.PopupCompletion)
+            
+        self.btn_browse_item = QPushButton("🔍")
+        self.btn_browse_item.setFixedWidth(36)
+        self.btn_browse_item.setMinimumHeight(30)
+        self.btn_browse_item.setMaximumHeight(30)
+        self.btn_browse_item.setObjectName("primaryBtn")
+        self.btn_browse_item.setToolTip("Cari barang dari katalog")
+        self.btn_browse_item.setStyleSheet("padding: 0; font-size: 14px;")
+        self.btn_browse_item.clicked.connect(self.browse_items_dialog)
+        
+        selector_layout.addWidget(self.loan_item_selector)
+        selector_layout.addWidget(self.btn_browse_item)
         self.borrower_name_input = QLineEdit()
         self.borrower_name_input.setPlaceholderText("Masukkan nama peminjam")
         
@@ -531,18 +707,27 @@ class MainWindow(QMainWindow):
 
         self.loan_quantity_input = QSpinBox()
         self.loan_quantity_input.setMinimum(1)
-        self.loan_quantity_input.setHeight(36) if hasattr(self.loan_quantity_input, 'setHeight') else None
+        self.loan_quantity_input.setMinimumHeight(30)
+        self.loan_quantity_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         self.borrow_date_input = QDateEdit(QDate.currentDate())
         self.borrow_date_input.setCalendarPopup(True)
         self.return_date_input = QDateEdit(QDate.currentDate())
         self.return_date_input.setCalendarPopup(True)
+        for date_input in (self.borrow_date_input, self.return_date_input):
+            date_input.setMinimumWidth(90)
+            date_input.setMinimumHeight(30)
+            date_input.setMaximumHeight(30)
+            date_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         self.loan_status_input = QComboBox()
         self.loan_status_input.addItems(["Dipinjam", "Selesai"])
+        self.loan_status_input.setMinimumHeight(30)
+        self.loan_status_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         self.loan_notes_input = QTextEdit()
-        self.loan_notes_input.setFixedHeight(60)
+        self.loan_notes_input.setFixedHeight(45)
+        self.loan_notes_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.loan_notes_input.setPlaceholderText("Catatan tambahan jika ada...")
 
         # Helper to add form labels
@@ -554,7 +739,7 @@ class MainWindow(QMainWindow):
             left_layout.addWidget(widget)
 
         create_labeled_widget("ID Barang (Otomatis)", self.loan_item_id_input)
-        create_labeled_widget("Nama Barang", self.loan_item_input)
+        create_labeled_widget("Pilih Nama Barang", selector_container)
         create_labeled_widget("Nama Peminjam", self.borrower_name_input)
         create_labeled_widget("NIM / ID Peminjam", self.borrower_id_input)
         create_labeled_widget("Jumlah Pinjam", self.loan_quantity_input)
@@ -581,20 +766,25 @@ class MainWindow(QMainWindow):
         create_labeled_widget("Catatan", self.loan_notes_input)
 
         # Action buttons
-        left_layout.addStrut(10) # Spacing
+        left_layout.addSpacing(4)
         
         btn_row1 = QHBoxLayout()
+        btn_row1.setSpacing(10)
         add_loan_button = QPushButton("➕ Tambah")
         add_loan_button.setObjectName("primaryBtn")  # Apply QSS style
         
         update_loan_button = QPushButton("✏️ Perbarui")
         update_loan_button.setObjectName("secondaryActionBtn") # Apply QSS style
         update_loan_button.setStyleSheet("background-color: rgba(0, 122, 122, 0.1); color: #007A7A; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        for button in (add_loan_button, update_loan_button):
+            button.setMinimumHeight(30)
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         btn_row1.addWidget(add_loan_button)
         btn_row1.addWidget(update_loan_button)
 
         btn_row2 = QHBoxLayout()
+        btn_row2.setSpacing(10)
         mark_return_button = QPushButton("✅ Tandai Selesai")
         mark_return_button.setObjectName("successBtn") # Apply QSS style
         mark_return_button.setStyleSheet("background-color: #26A69A; color: white; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
@@ -602,6 +792,9 @@ class MainWindow(QMainWindow):
         reset_loan_form_button = QPushButton("🔄 Bersihkan")
         reset_loan_form_button.setObjectName("resetFormBtn") # Apply QSS style
         reset_loan_form_button.setStyleSheet("background-color: #CFD8DC; color: #37474F; font-weight: bold; border: none; border-radius: 10px; padding: 10px;")
+        for button in (mark_return_button, reset_loan_form_button):
+            button.setMinimumHeight(30)
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         btn_row2.addWidget(mark_return_button)
         btn_row2.addWidget(reset_loan_form_button)
@@ -613,26 +806,45 @@ class MainWindow(QMainWindow):
 
         left_layout.addLayout(btn_row1)
         left_layout.addLayout(btn_row2)
-        left_layout.addStretch()
 
         left_widget.setLayout(left_layout)
 
-        # Right side: Search and table
+        left_scroll = QScrollArea()
+        left_scroll.setWidgetResizable(True)
+        left_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        left_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        left_scroll.setFrameShape(QFrame.NoFrame)
+        left_scroll.setMinimumWidth(300)
+        left_scroll.setWidget(left_widget)
+
+        # Right side: Tabbed table container
         right_widget = QWidget()
         right_layout = QVBoxLayout()
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(15)
 
-        # Search bar layout
+        # Tab Widget
+        self.loans_tab_widget = QTabWidget()
+        self.loans_tab_widget.setObjectName("loansTabWidget")
+
+        # Tab 1: Transaksi Peminjaman
+        tab_loans = QWidget()
+        tab_loans_layout = QVBoxLayout(tab_loans)
+        tab_loans_layout.setContentsMargins(12, 12, 12, 12)
+        tab_loans_layout.setSpacing(12)
+
+        # Tab 1 Search bar layout
         filter_layout = QHBoxLayout()
         filter_layout.setSpacing(10)
         
         self.loan_search_input = QLineEdit()
         self.loan_search_input.setPlaceholderText("Cari nama peminjam, barang, status...")
+        self.loan_search_input.setMinimumHeight(36)
         
         self.loan_filter_status = QComboBox()
         self.loan_filter_status.addItems(["Semua", "Dipinjam", "Selesai"])
         self.loan_filter_status.setFixedWidth(120)
+        self.loan_filter_status.setMinimumHeight(36)
         
         loan_search_button = QPushButton("🔍 Cari")
         loan_search_button.setObjectName("primaryBtn")
@@ -650,7 +862,7 @@ class MainWindow(QMainWindow):
         filter_layout.addWidget(loan_search_button)
         filter_layout.addWidget(loan_reset_button)
 
-        # Data table
+        # Tab 1 Data table
         self.loans_table = QTableWidget()
         self.loans_table.setObjectName("mainTable") # Apply QSS style
         self.loans_table.setColumnCount(8)
@@ -672,8 +884,60 @@ class MainWindow(QMainWindow):
         self.loans_table.setAlternatingRowColors(True) # Enable alternating row colors
         self.loans_table.cellClicked.connect(self.load_loan_form)
 
-        right_layout.addLayout(filter_layout)
-        right_layout.addWidget(self.loans_table)
+        tab_loans_layout.addLayout(filter_layout)
+        tab_loans_layout.addWidget(self.loans_table)
+
+        # Tab 2: Katalog Barang Tersedia
+        tab_catalog = QWidget()
+        tab_catalog_layout = QVBoxLayout(tab_catalog)
+        tab_catalog_layout.setContentsMargins(12, 12, 12, 12)
+        tab_catalog_layout.setSpacing(12)
+
+        # Tab 2 Search bar layout
+        catalog_filter_layout = QHBoxLayout()
+        catalog_filter_layout.setSpacing(10)
+
+        self.loan_catalog_search_input = QLineEdit()
+        self.loan_catalog_search_input.setPlaceholderText("Cari barang (nama, kategori, lokasi, kondisi)...")
+        self.loan_catalog_search_input.setMinimumHeight(36)
+        self.loan_catalog_search_input.textChanged.connect(self.load_loan_catalog_table)
+
+        btn_refresh_catalog = QPushButton("🔄 Refresh")
+        btn_refresh_catalog.setMinimumHeight(36)
+        btn_refresh_catalog.setObjectName("primaryBtn")
+        btn_refresh_catalog.setStyleSheet("padding: 8px 16px; font-weight: bold;")
+        btn_refresh_catalog.clicked.connect(self.load_loan_catalog_table)
+
+        catalog_filter_layout.addWidget(self.loan_catalog_search_input)
+        catalog_filter_layout.addWidget(btn_refresh_catalog)
+
+        # Tab 2 Data table
+        self.loan_catalog_table = QTableWidget()
+        self.loan_catalog_table.setObjectName("mainTable")
+        self.loan_catalog_table.setColumnCount(6)
+        self.loan_catalog_table.setHorizontalHeaderLabels([
+            "ID", "Nama Barang", "Kategori", "Stok Tersedia", "Kondisi", "Lokasi"
+        ])
+        self.loan_catalog_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.loan_catalog_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.loan_catalog_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.loan_catalog_table.setFocusPolicy(Qt.NoFocus)
+        self.loan_catalog_table.setShowGrid(False)
+        self.loan_catalog_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.loan_catalog_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.loan_catalog_table.horizontalHeader().setMinimumSectionSize(95)
+        self.loan_catalog_table.verticalHeader().setVisible(False)
+        self.loan_catalog_table.setAlternatingRowColors(True)
+        self.loan_catalog_table.cellDoubleClicked.connect(self.select_item_from_catalog_table)
+
+        tab_catalog_layout.addLayout(catalog_filter_layout)
+        tab_catalog_layout.addWidget(self.loan_catalog_table)
+
+        # Add tabs to QTabWidget
+        self.loans_tab_widget.addTab(tab_loans, "📋 Transaksi Peminjaman")
+        self.loans_tab_widget.addTab(tab_catalog, "📦 Katalog Barang Tersedia")
+
+        right_layout.addWidget(self.loans_tab_widget)
         right_widget.setLayout(right_layout)
 
         # Apply drop shadow
@@ -684,15 +948,15 @@ class MainWindow(QMainWindow):
         shadow_left.setColor(QColor(0, 80, 80, 12))  # Set shadow color
         left_widget.setGraphicsEffect(shadow_left)
 
-        shadow_table = QGraphicsDropShadowEffect(self.loans_table)
-        shadow_table.setBlurRadius(25)
-        shadow_table.setXOffset(0)
-        shadow_table.setYOffset(8)
-        shadow_table.setColor(QColor(0, 80, 80, 8))
-        self.loans_table.setGraphicsEffect(shadow_table)
+        shadow_tab = QGraphicsDropShadowEffect(self.loans_tab_widget)
+        shadow_tab.setBlurRadius(25)
+        shadow_tab.setXOffset(0)
+        shadow_tab.setYOffset(8)
+        shadow_tab.setColor(QColor(0, 80, 80, 8))
+        self.loans_tab_widget.setGraphicsEffect(shadow_tab)
 
-        main_layout.addWidget(left_widget)
-        main_layout.addWidget(right_widget, 1)
+        main_layout.addWidget(left_scroll, 1)
+        main_layout.addWidget(right_widget, 2)
 
         page.setLayout(main_layout)
         return page
@@ -700,6 +964,73 @@ class MainWindow(QMainWindow):
     def auto_predict_category(self, text):
         kategori = self.ai.predict_category(text)
         self.item_category_input.setText(kategori)
+
+    def populate_loan_item_fields(self, item_id, item_name):
+        self.loan_item_id_input.setText(str(item_id))
+        index = self.loan_item_selector.findData(item_id)
+        if index >= 0:
+            self.loan_item_selector.setCurrentIndex(index)
+
+    def on_loan_item_changed(self, index):
+        if index >= 0:
+            item_id = self.loan_item_selector.itemData(index)
+            self.loan_item_id_input.setText(str(item_id))
+            
+            item = self.db_manager.get_item_by_id(item_id)
+            if item:
+                # Batasi jumlah maksimal peminjaman sesuai stok
+                self.loan_quantity_input.setMaximum(max(1, item['quantity']))
+        else:
+            self.loan_item_id_input.clear()
+
+    def browse_items_dialog(self):
+        # Alih-alih membuka popup dialog baru, kita langsung alihkan tab kanan ke Katalog Barang Tersedia
+        self.loans_tab_widget.setCurrentIndex(1)
+        self.loan_catalog_search_input.setFocus()
+
+    def load_loan_catalog_table(self):
+        query = self.loan_catalog_search_input.text().strip()
+        items = self.db_manager.search_items(query, "Semua")
+        
+        # Saring hanya barang yang stoknya lebih dari nol
+        filtered_items = [item for item in items if item["quantity"] > 0]
+        
+        self.loan_catalog_table.setRowCount(len(filtered_items))
+        for row_index, item in enumerate(filtered_items):
+            self.loan_catalog_table.setItem(row_index, 0, QTableWidgetItem(str(item["id"])))
+            self.loan_catalog_table.setItem(row_index, 1, QTableWidgetItem(item["name"]))
+            self.loan_catalog_table.setItem(row_index, 2, QTableWidgetItem(item["category"]))
+            self.loan_catalog_table.setItem(row_index, 3, QTableWidgetItem(str(item["quantity"])))
+            self.loan_catalog_table.setItem(row_index, 4, QTableWidgetItem(item["condition"]))
+            self.loan_catalog_table.setItem(row_index, 5, QTableWidgetItem(item["location"]))
+
+    def select_item_from_catalog_table(self, row, _column):
+        item_id_str = self.loan_catalog_table.item(row, 0).text()
+        item_id = int(item_id_str)
+        
+        # Temukan dan pilih barang pada dropdown di form kiri
+        index = self.loan_item_selector.findData(item_id)
+        if index >= 0:
+            self.loan_item_selector.setCurrentIndex(index)
+            # Pindahkan kembali tab kanan ke daftar transaksi peminjaman
+            self.loans_tab_widget.setCurrentIndex(0)
+            # Fokuskan input nama peminjam agar user tinggal mengetik nama
+            self.borrower_name_input.setFocus()
+
+    def refresh_loan_item_selector(self):
+        self.loan_item_selector.blockSignals(True)
+        self.loan_item_selector.clear()
+        
+        # Load all items from DB
+        items = self.db_manager.get_items()
+        for item in items:
+            self.loan_item_selector.addItem(f"{item['name']} (Stok: {item['quantity']})", item["id"])
+            
+        self.loan_item_selector.setCurrentIndex(-1)
+        if self.loan_item_selector.lineEdit():
+            self.loan_item_selector.lineEdit().clear()
+        self.loan_item_id_input.clear()
+        self.loan_item_selector.blockSignals(False)
 
     def generate_qr_code(self):
         if not self.current_item_id:
@@ -774,9 +1105,7 @@ class MainWindow(QMainWindow):
         self.item_condition_input.setCurrentIndex(index if index >= 0 else 0)
         self.item_location_input.setText(item["location"])
         self.item_description_input.setPlainText(item["description"])
-
-        self.loan_item_id_input.setText(str(item["id"]))
-        self.loan_item_input.setText(item["name"])
+        self.populate_loan_item_fields(item["id"], item["name"])
 
     def clear_item_form(self):
         self.current_item_id = None
@@ -800,11 +1129,12 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Validasi", "Nama, kategori, dan lokasi tidak boleh kosong.")
             return
 
-        self.db_manager.add_item(name, category, quantity, condition, location, description)
+        new_item_id = self.db_manager.add_item(name, category, quantity, condition, location, description)
         self.load_items_table()
         self.load_dashboard()
         QMessageBox.information(self, "Sukses", "Barang berhasil ditambahkan.")
         self.clear_item_form()
+        self.populate_loan_item_fields(new_item_id, name)
 
     def update_item(self):
         if not self.current_item_id:
@@ -872,20 +1202,30 @@ class MainWindow(QMainWindow):
 
         self.current_loan_id = loan["id"]
         self.loan_item_id_input.setText(str(loan["item_id"]))
-        self.loan_item_input.setText(loan["item_name"])
+        
+        # Select in combobox
+        index = self.loan_item_selector.findData(loan["item_id"])
+        if index >= 0:
+            self.loan_item_selector.setCurrentIndex(index)
+        else:
+            self.loan_item_selector.addItem(f"{loan['item_name']} (Item Terhapus)", loan["item_id"])
+            self.loan_item_selector.setCurrentIndex(self.loan_item_selector.count() - 1)
+            
         self.borrower_name_input.setText(loan["borrower_name"])
         self.borrower_id_input.setText(loan["borrower_id"])
         self.loan_quantity_input.setValue(loan["quantity"])
         self.borrow_date_input.setDate(QDate.fromString(loan["borrow_date"], "yyyy-MM-dd"))
         self.return_date_input.setDate(QDate.fromString(loan["return_date"], "yyyy-MM-dd"))
-        index = self.loan_status_input.findText(loan["status"])
-        self.loan_status_input.setCurrentIndex(index if index >= 0 else 0)
+        index_status = self.loan_status_input.findText(loan["status"])
+        self.loan_status_input.setCurrentIndex(index_status if index_status >= 0 else 0)
         self.loan_notes_input.setPlainText(loan["notes"] or "")
 
     def clear_loan_form(self):
         self.current_loan_id = None
         self.loan_item_id_input.clear()
-        self.loan_item_input.clear()
+        self.loan_item_selector.setCurrentIndex(-1)
+        if self.loan_item_selector.lineEdit():
+            self.loan_item_selector.lineEdit().clear()
         self.borrower_name_input.clear()
         self.borrower_id_input.clear()
         self.loan_quantity_input.setValue(1)
@@ -906,7 +1246,7 @@ class MainWindow(QMainWindow):
         notes = self.loan_notes_input.toPlainText().strip()
 
         if not item_id_text:
-            QMessageBox.warning(self, "Validasi", "Pilih barang dari tabel master item terlebih dahulu.")
+            QMessageBox.warning(self, "Validasi", "Pilih barang dari tabel terlebih dahulu.")
             return
         if not borrower_name or not borrower_id:
             QMessageBox.warning(self, "Validasi", "Nama dan ID peminjam tidak boleh kosong.")
@@ -920,6 +1260,7 @@ class MainWindow(QMainWindow):
 
         self.load_loans_table()
         self.load_items_table()
+        self.load_loan_catalog_table()
         self.load_dashboard()
         QMessageBox.information(self, "Sukses", "Transaksi peminjaman berhasil ditambahkan.")
         self.clear_loan_form()
@@ -944,6 +1285,7 @@ class MainWindow(QMainWindow):
         self.db_manager.update_loan(self.current_loan_id, borrower_name, borrower_id, quantity, borrow_date, return_date, status, notes)
         self.load_loans_table()
         self.load_items_table()
+        self.load_loan_catalog_table()
         self.load_dashboard()
         QMessageBox.information(self, "Sukses", "Transaksi peminjaman berhasil diperbarui.")
         self.clear_loan_form()
@@ -956,6 +1298,7 @@ class MainWindow(QMainWindow):
         self.db_manager.update_loan_status(self.current_loan_id, "Selesai")
         self.load_loans_table()
         self.load_items_table()
+        self.load_loan_catalog_table()
         self.load_dashboard()
         QMessageBox.information(self, "Sukses", "Transaksi peminjaman berhasil ditandai selesai.")
         self.clear_loan_form()
@@ -975,6 +1318,7 @@ class MainWindow(QMainWindow):
                 self.load_dashboard()
                 self.load_items_table()
                 self.load_loans_table()
+                self.load_loan_catalog_table()
             else:
                 QMessageBox.critical(self, "Gagal", msg)
 
@@ -1009,6 +1353,24 @@ class MainWindow(QMainWindow):
         rows = self.db_manager.get_loans()
         export_pdf(rows, path, "Laporan Peminjaman")
         QMessageBox.information(self, "Sukses", f"Data peminjaman diekspor ke {path}")
+
+    def show_dashboard_page(self):
+        self.load_dashboard()
+        self.stack.setCurrentWidget(self.dashboard_page)
+
+    def show_items_page(self):
+        self.load_items_table()
+        self.stack.setCurrentWidget(self.items_page)
+
+    def show_loans_page(self):
+        self.load_loans_table()
+        self.load_loan_catalog_table()
+        self.refresh_loan_item_selector()
+        if hasattr(self, 'loan_catalog_search_input'):
+            self.loan_catalog_search_input.clear()
+        if hasattr(self, 'loans_tab_widget'):
+            self.loans_tab_widget.setCurrentIndex(1)
+        self.stack.setCurrentWidget(self.loans_page)
 
 
 def load_stylesheet(app):

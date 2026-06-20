@@ -79,11 +79,12 @@ class DatabaseManager:
     def add_item(self, name, category, quantity, condition, location, description):
         status = "Tersedia"
         created_at = datetime.now().isoformat()
-        self.connection.execute(
+        cursor = self.connection.execute(
             "INSERT INTO items(name, category, quantity, condition, location, description, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
             (name, category, quantity, condition, location, description, status, created_at),
         )
         self.connection.commit()
+        return cursor.lastrowid
 
     def update_item(self, item_id, name, category, quantity, condition, location, description):
         status = "Tersedia" if quantity > 0 else "Dipinjam"
