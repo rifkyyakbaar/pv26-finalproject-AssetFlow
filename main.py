@@ -263,6 +263,7 @@ class MainWindow(QMainWindow):
         action_dashboard = nav_menu.addAction("📊 Dashboard Utama")
         action_items = nav_menu.addAction("🗃️ Kelola Master Barang")
         action_loans = nav_menu.addAction("🔄 Data Peminjaman")
+        action_reset = nav_menu.addAction("⚠️ Reset Database")
         
         nav_menu.addSeparator() 
         action_logout = nav_menu.addAction("🚪 Logout Sistem")
@@ -270,6 +271,7 @@ class MainWindow(QMainWindow):
         action_dashboard.triggered.connect(self.show_dashboard_page)
         action_items.triggered.connect(self.show_items_page)
         action_loans.triggered.connect(self.show_loans_page)
+        action_reset.triggered.connect(self.do_factory_reset)
         action_logout.triggered.connect(self.logout)
 
     def create_dashboard_page(self):
@@ -347,7 +349,7 @@ class MainWindow(QMainWindow):
         export_loans_pdf_btn = QPushButton("📕 Export Peminjaman PDF")
         export_loans_pdf_btn.setObjectName("exportBtn")
         
-        reset_db_btn = QPushButton("⚠️ Factory Reset")
+        reset_db_btn = QPushButton("⚠️ Reset Database")
         reset_db_btn.setObjectName("resetBtn")
 
         export_items_btn.clicked.connect(self.export_items_csv)
