@@ -30,17 +30,32 @@ Proyek ini dikembangkan untuk memenuhi tugas mata kuliah Pemrograman Visual oleh
 ### 1. Halaman Login
 <img width="267" height="272" alt="Login" src="https://github.com/user-attachments/assets/379aa357-7e80-4439-8b07-de80994e1b3c" />
 
-### 2. Navigasi Menu
-<img width="959" height="596" alt="Navigasi Menu" src="https://github.com/user-attachments/assets/6529582b-8288-44e5-9fe6-e0bfa84e8e58" />
+### 2. Status
+<img width="959" height="598" alt="status" src="https://github.com/user-attachments/assets/65c76fca-a25c-4034-aa2d-6851c6b15d65" />
 
-### 3. Dashboard Utama & Analitik
-<img width="959" height="596" alt="Dashboard" src="https://github.com/user-attachments/assets/059f478c-8736-4bc7-9fef-5e3830609cc4" />
+### 3. Navigasi Menu
+<img width="959" height="599" alt="navigasi mnu" src="https://github.com/user-attachments/assets/ad19877c-17c2-46c9-8d2d-0cadabb9417d" />
 
-### 4. Kelola Master Barang & Generate QR Code
-<img width="959" height="597" alt="Kelola Master Barang" src="https://github.com/user-attachments/assets/8d97accc-0eb2-4a43-b7aa-1201614a1342" />
+### 4. Dashboard Utama & Analitik
+<img width="959" height="599" alt="dashbord" src="https://github.com/user-attachments/assets/90cecacf-e9a3-4c66-be5b-149aa2c1438d" />
 
-### 5. Pencatatan Data Peminjaman
-<img width="959" height="599" alt="Data Peminjaman" src="https://github.com/user-attachments/assets/bed695fd-3bed-4b9d-8ab5-c4f0cd8786da" />
+### 5. Kelola Master Barang
+<img width="959" height="598" alt="kelola master brang" src="https://github.com/user-attachments/assets/005f9c31-7773-41bb-88f9-88df50cb0bea" />
+
+### 6. Tambah, Edit, Hapus, dan QR Code Menu Kelola Master Barang
+<img width="5040" height="2835" alt="form master barang" src="https://github.com/user-attachments/assets/790c9308-1a2f-4fd1-ac9d-02f735dd4135" />
+
+### 7. Pencatatan Data Peminjaman
+<img width="959" height="599" alt="data peminjaman" src="https://github.com/user-attachments/assets/4746b4f3-6bed-4fb5-8922-bfdbfaaa2991" />
+
+### 9. Tambah dan Edit Menu Data Peminjaman
+<img width="5040" height="2835" alt="form data peminjaman" src="https://github.com/user-attachments/assets/1cc956e5-7ef5-4aa5-9f8d-20f4790a9109" />
+
+### 9. Reset Database
+<img width="959" height="598" alt="reset database" src="https://github.com/user-attachments/assets/934c288d-568a-4d63-be42-189dbcd9b25b" />
+
+### 9. RExit
+<img width="959" height="599" alt="image" src="https://github.com/user-attachments/assets/f3acc064-6dc2-4d09-80f1-c50b60663ed1" />
 
 ---
 
