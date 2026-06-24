@@ -3,7 +3,6 @@ from sklearn.naive_bayes import MultinomialNB
 
 class CategoryPredictor:
     def __init__(self):
-        # Training dataset
         self.contoh_barang = [
             "Laptop Asus", "Mouse Logitech", "Keyboard Mekanikal", "Monitor LG", "Proyektor Epson", "Kabel HDMI",  # Elektronik
             "Meja Kayu", "Kursi Kantor", "Lemari Besi", "Rak Buku", "Papan Tulis",                               # Furnitur
@@ -15,13 +14,11 @@ class CategoryPredictor:
             "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis"
         ]
         
-        # Initialize and train the model
         self.vectorizer = CountVectorizer()
         self.model = MultinomialNB()
         self._train_model()
 
     def _train_model(self):
-        # Vectorize text features and train model
         X = self.vectorizer.fit_transform(self.contoh_barang)
         self.model.fit(X, self.kategori_barang)
 
