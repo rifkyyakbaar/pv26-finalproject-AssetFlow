@@ -30,7 +30,7 @@ Proyek ini dikembangkan untuk memenuhi tugas mata kuliah Pemrograman Visual oleh
 ### 1. Halaman Login
 <img width="267" height="272" alt="Login" src="https://github.com/user-attachments/assets/379aa357-7e80-4439-8b07-de80994e1b3c" />
 
-### 2. Status
+### 2. Tentang Aplikasi
 <img width="959" height="598" alt="status" src="https://github.com/user-attachments/assets/65c76fca-a25c-4034-aa2d-6851c6b15d65" />
 
 ### 3. Navigasi Menu
