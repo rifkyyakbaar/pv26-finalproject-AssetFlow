@@ -27,10 +27,8 @@ Proyek ini dikembangkan untuk memenuhi tugas mata kuliah oleh tim yang terdiri d
 
 ## 📸 Screenshot Aplikasi
 
-*(Catatan: Letakkan file gambar di dalam folder `assets/` atau ganti URL di bawah dengan link gambarmu)*
-
 ### 1. Halaman Login
-![Login](<img width="267" height="272" alt="Login" src="https://github.com/user-attachments/assets/379aa357-7e80-4439-8b07-de80994e1b3c" />)
+<img width="267" height="272" alt="Login" src="https://github.com/user-attachments/assets/379aa357-7e80-4439-8b07-de80994e1b3c" />
 
 ### 2. Navigasi Menu
 ![Menu](<img width="959" height="596" alt="Navigasi Menu" src="https://github.com/user-attachments/assets/6529582b-8288-44e5-9fe6-e0bfa84e8e58" />)
