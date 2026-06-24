@@ -42,19 +42,19 @@ Proyek ini dikembangkan untuk memenuhi tugas mata kuliah Pemrograman Visual oleh
 ### 5. Kelola Master Barang
 <img width="959" height="598" alt="kelola master brang" src="https://github.com/user-attachments/assets/005f9c31-7773-41bb-88f9-88df50cb0bea" />
 
-### 6. Tambah, Edit, Hapus, dan QR Code Menu Kelola Master Barang
+### 6. Form Tambah, Edit, Hapus, dan QR Code Menu Kelola Master Barang
 <img width="5040" height="2835" alt="form master barang" src="https://github.com/user-attachments/assets/790c9308-1a2f-4fd1-ac9d-02f735dd4135" />
 
 ### 7. Pencatatan Data Peminjaman
 <img width="959" height="599" alt="data peminjaman" src="https://github.com/user-attachments/assets/4746b4f3-6bed-4fb5-8922-bfdbfaaa2991" />
 
-### 9. Tambah dan Edit Menu Data Peminjaman
+### 9. Form Tambah dan Edit Menu Data Peminjaman
 <img width="5040" height="2835" alt="form data peminjaman" src="https://github.com/user-attachments/assets/1cc956e5-7ef5-4aa5-9f8d-20f4790a9109" />
 
 ### 9. Reset Database
 <img width="959" height="598" alt="reset database" src="https://github.com/user-attachments/assets/934c288d-568a-4d63-be42-189dbcd9b25b" />
 
-### 9. RExit
+### 9. Exit
 <img width="959" height="599" alt="image" src="https://github.com/user-attachments/assets/f3acc064-6dc2-4d09-80f1-c50b60663ed1" />
 
 ---
