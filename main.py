@@ -1138,6 +1138,18 @@ class MainWindow(QMainWindow):
     def logout(self):
         self.close()
 
+    def closeEvent(self, event):
+        confirm = QMessageBox.question(
+            self,
+            "Konfirmasi Keluar",
+            "Apakah Anda yakin ingin keluar dari aplikasi?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if confirm == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
     def load_items_table(self):
         query = self.item_search_input.text().strip()
         status_filter = self.item_filter_status.currentText()
