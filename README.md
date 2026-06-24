@@ -7,7 +7,7 @@ AssetFlow adalah perangkat lunak desktop multi-halaman berbasis antarmuka grafis
 
 ## 👥 Tim Pengembang
 
-Proyek ini dikembangkan untuk memenuhi tugas mata kuliah oleh tim yang terdiri dari:
+Proyek ini dikembangkan untuk memenuhi tugas mata kuliah Pemrograman Visual oleh tim yang terdiri dari:
 
 | Nama Anggota | NIM | Peran Utama |
 | :--- | :--- | :--- |
