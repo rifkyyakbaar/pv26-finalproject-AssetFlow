@@ -29,14 +29,20 @@ Proyek ini dikembangkan untuk memenuhi tugas mata kuliah oleh tim yang terdiri d
 
 *(Catatan: Letakkan file gambar di dalam folder `assets/` atau ganti URL di bawah dengan link gambarmu)*
 
-### 1. Dashboard Utama & Analitik
-![Dashboard](link_gambar_dashboard.png)
+### 1. Halaman Login
+![Login](<img width="267" height="272" alt="Login" src="https://github.com/user-attachments/assets/379aa357-7e80-4439-8b07-de80994e1b3c" />)
 
-### 2. Kelola Master Barang & Generate QR Code
-![Master Barang](link_gambar_master_barang.png)
+### 2. Navigasi Menu
+![Menu](<img width="959" height="596" alt="Navigasi Menu" src="https://github.com/user-attachments/assets/6529582b-8288-44e5-9fe6-e0bfa84e8e58" />)
 
-### 3. Pencatatan Data Peminjaman
-![Data Peminjaman](link_gambar_peminjaman.png)
+### 3. Dashboard Utama & Analitik
+![Dashboard](<img width="959" height="596" alt="Dashboard" src="https://github.com/user-attachments/assets/059f478c-8736-4bc7-9fef-5e3830609cc4" />)
+
+### 4. Kelola Master Barang & Generate QR Code
+![Master Barang](<img width="959" height="597" alt="Kelola Master Barang" src="https://github.com/user-attachments/assets/8d97accc-0eb2-4a43-b7aa-1201614a1342" />)
+
+### 5. Pencatatan Data Peminjaman
+![Data Peminjaman](<img width="959" height="599" alt="Data Peminjaman" src="https://github.com/user-attachments/assets/bed695fd-3bed-4b9d-8ab5-c4f0cd8786da" />)
 
 ---
 
