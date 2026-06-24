@@ -39,13 +39,13 @@ Proyek ini dikembangkan untuk memenuhi tugas mata kuliah Pemrograman Visual oleh
 ### 4. Dashboard Utama & Analitik
 <img width="959" height="599" alt="dashbord" src="https://github.com/user-attachments/assets/90cecacf-e9a3-4c66-be5b-149aa2c1438d" />
 
-### 5. Kelola Master Barang
+### 5. Menu Kelola Master Barang
 <img width="959" height="598" alt="kelola master brang" src="https://github.com/user-attachments/assets/005f9c31-7773-41bb-88f9-88df50cb0bea" />
 
 ### 6. Form Tambah, Edit, Hapus, dan QR Code Menu Kelola Master Barang
 <img width="5040" height="2835" alt="form master barang" src="https://github.com/user-attachments/assets/790c9308-1a2f-4fd1-ac9d-02f735dd4135" />
 
-### 7. Pencatatan Data Peminjaman
+### 7. Menu Pencatatan Data Peminjaman
 <img width="959" height="599" alt="data peminjaman" src="https://github.com/user-attachments/assets/4746b4f3-6bed-4fb5-8922-bfdbfaaa2991" />
 
 ### 9. Form Tambah dan Edit Menu Data Peminjaman
