@@ -76,5 +76,36 @@ Pastikan Python 3.x sudah terinstal di perangkat Anda. Ikuti langkah-langkah ber
 
 1. **Clone/Unduh Repositori:**
    ```bash
-   git clone [https://github.com/username_kamu/assetflow.git](https://github.com/username_kamu/assetflow.git)
-   cd assetflow
+   git clone https://github.com/rifkyyakbaar/pv26-finalproject-AssetFlow.git
+   cd pv26-finalproject-AssetFlow
+   ```
+
+2. **Buat & Aktifkan Virtual Environment (Opsional):**
+   ```bash
+   python -m venv venv
+   # Di Windows (CMD):
+   venv\Scripts\activate
+   # Di macOS/Linux:
+   source venv/bin/activate
+   ```
+
+3. **Install Dependensi:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Jalankan Aplikasi:**
+   ```bash
+   python main.py
+   ```
+
+## Akun Admin Default
+
+- Username: `admin`
+- Password: `admin123`
+
+## Catatan
+
+- Database SQLite dibuat otomatis di `database/assetflow.db` saat aplikasi dijalankan.
+- UI menggunakan `QStackedWidget` untuk tampilan multi-halaman.
+- Semua form melakukan validasi dasar sehingga aplikasi tidak mudah crash akibat input kosong.
