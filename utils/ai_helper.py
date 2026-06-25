@@ -1,24 +1,36 @@
+import os
+import json
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
 class CategoryPredictor:
     def __init__(self):
-        # Training dataset
-        self.contoh_barang = [
-            "Laptop Asus", "Mouse Logitech", "Keyboard Mekanikal", "Monitor LG", "Proyektor Epson", "Kabel HDMI",  # Elektronik
-            "Meja Kayu", "Kursi Kantor", "Lemari Besi", "Rak Buku", "Papan Tulis",                               # Furnitur
-            "Spidol Marker", "Kertas HVS", "Pena Bolpoin", "Stapler", "Buku Catatan", "Tinta Printer"            # Alat Tulis
-        ]
-        self.kategori_barang = [
-            "Elektronik", "Elektronik", "Elektronik", "Elektronik", "Elektronik", "Elektronik",
-            "Furnitur", "Furnitur", "Furnitur", "Furnitur", "Furnitur",
-            "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis", "Alat Tulis"
-        ]
+        self.contoh_barang = []
+        self.kategori_barang = []
+        self._load_dataset()
         
         # Initialize and train the model
         self.vectorizer = CountVectorizer()
         self.model = MultinomialNB()
         self._train_model()
+
+    def _load_dataset(self):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        json_path = os.path.join(current_dir, "training_data.json")
+        try:
+            if os.path.exists(json_path):
+                with open(json_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    for item in data:
+                        self.contoh_barang.append(item["nama"])
+                        self.kategori_barang.append(item["kategori"])
+            else:
+                # Fallback dataset jika file hilang
+                self.contoh_barang = ["Laptop", "Meja", "Pena"]
+                self.kategori_barang = ["Elektronik", "Furnitur", "Alat Tulis"]
+        except:
+            self.contoh_barang = ["Laptop", "Meja", "Pena"]
+            self.kategori_barang = ["Elektronik", "Furnitur", "Alat Tulis"]
 
     def _train_model(self):
         # Vectorize text features and train model
