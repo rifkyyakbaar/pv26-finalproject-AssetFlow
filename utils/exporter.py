@@ -21,7 +21,6 @@ def export_csv(rows, path, report_name):
 
 
 def export_pdf(rows, path, title):
-    # Set page size to Landscape A4 (841.89 x 595.27 points) with 36 points (0.5 inch) margins
     doc = SimpleDocTemplate(
         path, 
         pagesize=landscape(A4),
@@ -32,7 +31,6 @@ def export_pdf(rows, path, title):
     )
     styles = getSampleStyleSheet()
     
-    # Custom title style
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Title'],
@@ -52,7 +50,6 @@ def export_pdf(rows, path, title):
 
     raw_headers = list(rows[0].keys())
     
-    # Define logical column widths
     col_widths_map = {
         "id": 30,
         "item_id": 50,
@@ -72,7 +69,6 @@ def export_pdf(rows, path, title):
         "notes": 120
     }
     
-    # Friendly header translations in Indonesian
     header_translations = {
         "id": "ID",
         "item_id": "ID Barang",
@@ -92,7 +88,6 @@ def export_pdf(rows, path, title):
         "notes": "Catatan"
     }
 
-    # Styles for table cells
     header_para_style = ParagraphStyle(
         'TableHeader',
         parent=styles['Normal'],
@@ -100,7 +95,7 @@ def export_pdf(rows, path, title):
         fontSize=9,
         leading=11,
         textColor=colors.white,
-        alignment=1 # Center
+        alignment=1 
     )
     
     cell_para_style = ParagraphStyle(
@@ -112,7 +107,6 @@ def export_pdf(rows, path, title):
         textColor=colors.HexColor("#1A3038")
     )
 
-    # Wrap headers in Paragraphs
     headers_row = []
     for h in raw_headers:
         display_name = header_translations.get(h, h.replace("_", " ").title())
@@ -120,12 +114,10 @@ def export_pdf(rows, path, title):
         
     data = [headers_row]
     
-    # Wrap content in Paragraphs
     for row in rows:
         content_row = []
         for key in raw_headers:
             val = str(row.get(key, ""))
-            # Format raw ISO datetime string to be cleaner
             if key == "created_at" and "T" in val:
                 try:
                     dt = datetime.fromisoformat(val)
@@ -135,12 +127,10 @@ def export_pdf(rows, path, title):
             content_row.append(Paragraph(val, cell_para_style))
         data.append(content_row)
 
-    # Calculate column widths
     col_widths = []
     for h in raw_headers:
         col_widths.append(col_widths_map.get(h, 80))
         
-    # Scale column widths to fit printable page width (769.89 points)
     printable_width = 769.89
     total_width = sum(col_widths)
     if total_width > printable_width:
@@ -151,7 +141,7 @@ def export_pdf(rows, path, title):
     table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#008080")), # Clean dark teal
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#008080")), 
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ("TOPPADDING", (0, 0), (-1, -1), 6),
