@@ -9,7 +9,6 @@ class CategoryPredictor:
         self.kategori_barang = []
         self._load_dataset()
         
-        # Initialize and train the model
         self.vectorizer = CountVectorizer()
         self.model = MultinomialNB()
         self._train_model()
@@ -33,7 +32,6 @@ class CategoryPredictor:
             self.kategori_barang = ["Elektronik", "Furnitur", "Alat Tulis"]
 
     def _train_model(self):
-        # Vectorize text features and train model
         X = self.vectorizer.fit_transform(self.contoh_barang)
         self.model.fit(X, self.kategori_barang)
 

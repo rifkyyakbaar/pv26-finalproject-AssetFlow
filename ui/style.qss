@@ -13,25 +13,25 @@ QMainWindow, QDialog {
 /* Label Umum */
 QLabel {
     color: #2A4349;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 /* Judul Utama */
 QLabel#titleLabel {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: bold;
     color: #0F2429;
-    padding-bottom: 12px;
+    padding-bottom: 8px;
 }
 
 /* Top Mini Badges / Kapsul Statistik */
 QLabel#miniBadge {
     background-color: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.8);
-    border-radius: 12px;
-    padding: 12px 20px;
+    border-radius: 10px;
+    padding: 8px 16px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 13px;
     color: #2A4349;
 }
 
@@ -41,25 +41,25 @@ QLabel#miniBadge {
 QFrame#mainCard {
     background-color: rgba(255, 255, 255, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 24px;
+    border-radius: 20px;
 }
 
 QGroupBox {
     background-color: rgba(255, 255, 255, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 16px;
-    margin-top: 12px;
-    padding: 16px;
+    border-radius: 12px;
+    margin-top: 8px;
+    padding: 12px;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
     color: #2A4349;
 }
 
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    left: 15px;
-    padding: 0 5px;
+    left: 12px;
+    padding: 0 4px;
     color: #008080;
 }
 
@@ -71,9 +71,9 @@ QPushButton {
     color: #FFFFFF;
     font-weight: bold;
     border: none;
-    border-radius: 10px;
-    padding: 8px 16px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
 }
 
 QPushButton:hover {
@@ -90,9 +90,9 @@ QPushButton#exportBtn {
     color: #FFFFFF;
     font-weight: bold;
     border: none;
-    border-radius: 12px;
-    padding: 10px 20px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
 }
 
 QPushButton#exportBtn:hover {
@@ -107,8 +107,8 @@ QPushButton#exportBtn:pressed {
 QPushButton#resetBtn, QPushButton#btn_hapus_barang {
     background-color: #E57373;
     color: #FFFFFF;
-    border-radius: 12px;
-    padding: 10px 20px;
+    border-radius: 8px;
+    padding: 7px 14px;
 }
 
 QPushButton#resetBtn:hover, QPushButton#btn_hapus_barang:hover {
@@ -135,27 +135,73 @@ QPushButton#btn_clear_barang:pressed, QPushButton#btn_qr_barang:pressed {
 /* ==========================================================================
    INPUT FIELDS (QLineEdit, QComboBox, QTextEdit, QDateEdit)
    ========================================================================== */
+/* Container Form Input di Sisi Kiri */
+QFrame#cardWidget {
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 128, 128, 0.12);
+    border-radius: 12px;
+}
+
 QLineEdit, QTextEdit {
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 122, 122, 0.15);
-    border-radius: 10px;
-    padding: 6px 12px;
-    color: #2A4349;
-    font-size: 13px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 122, 122, 0.2);
+    border-radius: 8px;
+    padding: 4px 8px;
+    color: #1A3038; /* Warna teks gelap kontras tinggi */
+    font-size: 12px;
 }
 
 QComboBox, QDateEdit {
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 122, 122, 0.15);
-    border-radius: 10px;
-    padding: 6px 30px 6px 12px; 
-    color: #2A4349;
-    font-size: 13px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 122, 122, 0.2);
+    border-radius: 8px;
+    padding: 4px 26px 4px 8px; 
+    color: #1A3038; /* Warna teks gelap kontras tinggi */
+    font-size: 12px;
 }
 
-QLineEdit:focus, QComboBox:focus, QTextEdit:focus, QDateEdit:focus {
+QLineEdit, QComboBox, QDateEdit, QSpinBox {
+    min-height: 26px;
+}
+
+QTextEdit {
+    min-height: 45px;
+}
+
+QLineEdit:focus, QComboBox:focus, QTextEdit:focus, QDateEdit:focus, QSpinBox:focus {
     border: 2px solid #008080;
     background-color: #FFFFFF;
+}
+
+/* Modifikasi Input Non-Aktif / Read-Only Agar Tetap Terbaca Jelas */
+QLineEdit:read-only, QLineEdit:disabled, QComboBox:disabled, QDateEdit:disabled {
+    background-color: rgba(235, 242, 242, 0.7);
+    color: #4A6369; /* Teks abu-gelap yang kontras dan terbaca */
+    border: 1px dashed rgba(0, 122, 122, 0.25);
+}
+
+/* Editor Teks Internal untuk ComboBox yang dapat diketik */
+QComboBox:editable {
+    background-color: #FFFFFF;
+    color: #1A3038;
+}
+
+QComboBox QLineEdit {
+    color: #1A3038;
+    background-color: transparent;
+    border: none;
+    padding: 0px;
+}
+
+/* Modifikasi Dropdown List Agar Kontras Tinggi (Teks Gelap di Background Putih) */
+QComboBox QAbstractItemView {
+    background-color: #FFFFFF;
+    border: 1px solid rgba(0, 122, 122, 0.25);
+    selection-background-color: #008080;
+    selection-color: #FFFFFF;
+    color: #1A3038; /* Teks item sangat kontras */
+    outline: none;
+    padding: 4px;
 }
 
 /* ==========================================================================
@@ -164,10 +210,10 @@ QLineEdit:focus, QComboBox:focus, QTextEdit:focus, QDateEdit:focus {
 QComboBox::drop-down, QDateEdit::drop-down {
     subcontrol-origin: padding;
     subcontrol-position: top right;
-    width: 26px;
+    width: 24px;
     border-left: 1px solid rgba(0, 122, 122, 0.1);
-    border-top-right-radius: 9px;
-    border-bottom-right-radius: 9px;
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
     background-color: transparent;
 }
 
@@ -177,26 +223,26 @@ QComboBox::drop-down:hover, QDateEdit::drop-down:hover {
 
 QComboBox::down-arrow {
     image: url(ui/icons/downarrow.png); 
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
 }
 
 QDateEdit::down-arrow {
     image: url(ui/icons/calendar.png); 
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
 }
 
 /* ==========================================================================
    SPESIFIK: QSPINBOX CUSTOM
    ========================================================================== */
 QSpinBox {
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 122, 122, 0.15);
-    border-radius: 10px;
-    padding: 6px 30px 6px 12px; 
-    color: #2A4349;
-    font-size: 13px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 122, 122, 0.2);
+    border-radius: 8px;
+    padding: 4px 26px 4px 8px; 
+    color: #1A3038; /* Kontras tinggi, gelap */
+    font-size: 12px;
 }
 
 QSpinBox:focus {
@@ -204,12 +250,18 @@ QSpinBox:focus {
     background-color: #FFFFFF;
 }
 
+QSpinBox:disabled {
+    background-color: rgba(235, 242, 242, 0.7);
+    color: #4A6369;
+    border: 1px dashed rgba(0, 122, 122, 0.25);
+}
+
 QSpinBox::up-button {
     subcontrol-origin: border;
     subcontrol-position: top right;
     width: 24px;
-    height: 16px;
-    border-top-right-radius: 9px;
+    height: 12px;
+    border-top-right-radius: 7px;
     background-color: transparent;
     border-left: 1px solid rgba(0, 122, 122, 0.1);
     border-bottom: 1px solid rgba(0, 122, 122, 0.05);
@@ -221,16 +273,16 @@ QSpinBox::up-button:hover {
 
 QSpinBox::up-arrow {
     image: url(ui/icons/uparrow.png); 
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 QSpinBox::down-button {
     subcontrol-origin: border;
     subcontrol-position: bottom right;
     width: 24px;
-    height: 16px;
-    border-bottom-right-radius: 9px;
+    height: 12px;
+    border-bottom-right-radius: 7px;
     background-color: transparent;
     border-left: 1px solid rgba(0, 122, 122, 0.1);
 }
@@ -241,8 +293,8 @@ QSpinBox::down-button:hover {
 
 QSpinBox::down-arrow {
     image: url(ui/icons/downarrow.png); 
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 /* ==========================================================================
@@ -257,9 +309,9 @@ QMenuBar {
 
 QMenuBar::item {
     background: transparent;
-    padding: 6px 12px;
+    padding: 4px 10px;
     margin: 2px;
-    border-radius: 6px;
+    border-radius: 4px;
 }
 
 QMenuBar::item:selected {
@@ -271,11 +323,11 @@ QMenu {
     background-color: #F5FAFA;
     border: 1px solid rgba(0, 128, 128, 0.1);
     border-radius: 8px;
-    padding: 5px;
+    padding: 4px;
 }
 
 QMenu::item {
-    padding: 6px 20px;
+    padding: 4px 16px;
     border-radius: 4px;
     color: #2A4349;
 }
@@ -290,19 +342,19 @@ QMenu::item:selected {
    ========================================================================== */
 QTableWidget {
     background-color: rgba(255, 255, 255, 0.75);
-    alternate-background-color: rgba(234, 241, 241, 0.3); /* Zebra striping yang sangat halus */
+    alternate-background-color: rgba(234, 241, 241, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.6);
-    gridline-color: rgba(0, 128, 128, 0.03); /* Garis grid dibuat hampir samar */
-    border-radius: 18px;
-    padding: 8px;
-    font-size: 13px;
+    gridline-color: rgba(0, 128, 128, 0.03);
+    border-radius: 12px;
+    padding: 6px;
+    font-size: 12px;
 }
 
 /* Mengatur baris data tabel */
 QTableWidget::item {
-    padding: 12px 10px;
+    padding: 8px 8px;
     color: #2A4349;
-    border-bottom: 1px solid rgba(0, 128, 128, 0.04); /* Garis pembatas baris yang bersih */
+    border-bottom: 1px solid rgba(0, 128, 128, 0.04);
 }
 
 /* Efek feedback saat kursor melewati baris data */
@@ -313,20 +365,20 @@ QTableWidget::item:hover {
 
 /* Baris saat diklik/dipilih (Selected State) */
 QTableWidget::item:selected {
-    background-color: rgba(0, 128, 128, 0.09); /* Teal transparan lembut */
+    background-color: rgba(0, 128, 128, 0.09);
     color: #006666;
     font-weight: 600;
 }
 
 /* Desain Header Atas Tabel */
 QHeaderView::section {
-    background-color: rgba(234, 241, 241, 0.85); /* Senada dengan background halaman */
+    background-color: rgba(234, 241, 241, 0.85);
     color: #557177;
-    padding: 10px;
+    padding: 8px;
     font-weight: bold;
     font-size: 12px;
     border: none;
-    border-bottom: 2px solid rgba(0, 128, 128, 0.08); /* Garis tegas bawah header */
+    border-bottom: 2px solid rgba(0, 128, 128, 0.08);
 }
 
 /* ==========================================================================
@@ -335,14 +387,14 @@ QHeaderView::section {
 QScrollBar:vertical {
     border: none;
     background: transparent;
-    width: 8px;
+    width: 6px;
     margin: 0px;
 }
 
 QScrollBar::handle:vertical {
     background: rgba(0, 128, 128, 0.2);
-    min-height: 20px;
-    border-radius: 4px;
+    min-height: 16px;
+    border-radius: 3px;
 }
 
 QScrollBar::handle:vertical:hover {
@@ -352,4 +404,58 @@ QScrollBar::handle:vertical:hover {
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     border: none;
     background: transparent;
+}
+
+/* Membuat background scroll area transparan agar sudut rounded cardWidget terlihat bersih */
+QScrollArea, QScrollArea > QWidget {
+    background: transparent;
+    border: none;
+}
+
+/* ==========================================================================
+   QTabWidget & QTabBar (Desain Premium Soft-UI)
+   ========================================================================== */
+QTabWidget::pane {
+    border: 1px solid rgba(0, 128, 128, 0.12);
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 12px;
+    border-top-left-radius: 0px; /* Membuat tab kiri atas menyatu tanpa sekat melengkung */
+    top: -1px;
+}
+
+QTabBar::tab {
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(0, 128, 128, 0.08);
+    border-bottom-color: transparent;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 6px 16px;
+    font-weight: bold;
+    color: #557177;
+    margin-right: 4px;
+}
+
+QTabBar::tab:hover {
+    background-color: rgba(0, 128, 128, 0.05);
+    color: #008080;
+}
+
+QTabBar::tab:selected {
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 128, 128, 0.12);
+    border-bottom: 2px solid #008080;
+    color: #008080;
+}
+
+/* Hilangkan bingkai bertumpuk di dalam tab */
+QTabWidget QTableWidget {
+    background-color: transparent;
+    border: none;
+    border-radius: 0px;
+    padding: 0px;
+}
+
+QTabWidget QHeaderView::section {
+    background-color: rgba(234, 241, 241, 0.6);
+    border-bottom: 1.5px solid rgba(0, 128, 128, 0.08);
 }
